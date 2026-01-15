@@ -29,23 +29,26 @@ All analyses were run on a Linux OS with the following packages/scripts download
 
 5. Use PyQC: python PyQC.py to load the GUI; navigate to (1) the injection slice images (2) the projection slice images and separately QC using the numerical ratings outlined in the *Manual Quality Control* section of Nathan et al. Save the injection and projection QC results as separate .csv files.
 
-6. compare_manual_qc_both_raters.R: come up with a table of experiments with discrepancies across both raters, and each rater's rating. This facilitates easier discussion over consensus ratings for these images. 
+6. compare_manual_qc_both_raters.R: come up with a table of experiments with discrepancies across both raters, and each rater's rating. This facilitates easier discussion over consensus ratings for these images.
+
+7. overall_qc_exclusion.R: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. 
 
 ### Rebuilding Connectomes
-7. rebuild_knox_connectome.sh / rebuild_oh_connectome.sh: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within experiments_exclude.json (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the NEW files replacing experiments_exclude.json.
+8. rebuild_knox_connectome.sh / rebuild_oh_connectome.sh: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within experiments_exclude.json (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the NEW files replacing experiments_exclude.json.
 
 * Note: I also modified get_regional_data() in model_data.py to include the 211 Oh connectome regions, rather than the 291 regions defined in Knox et al. This choice enables direct comparison/downstream application of the rebuilt homogeneous model in place of the Oh connectome.
 
 ### Graph Theory Analyses
 Code provided by Lizette Herrera-Portillo from her recent manuscript.
 
-8. rich_club_vikram.m
-9. community_vikram_updated.m
+9. process_flip_regionalized_knox_connectomes.R: Since connectivity is only defined for right-hemisphere injections, but we need a full n x n matrix for all graph theoretical analyses, we assume that connectivity is symmetric across the midline to create a square connectivity matrix. We assume connectivity to the contralateral regions is the same as connectivity to the ipsilateral regions, but flipped across the midline (ex: if we know that the right DG is connected to the left CA1, we assume the left DG is connected to the right CA1. This assumption has been verified in the literature).
+10. rich_club_connectome_bin.m: Calculates rich club coefficient and topological rich club using the top 20% of region x region connections above. See *Rich Club Algorithm* in Supplementary Methods for more info.
+11. community_connectome_bin.m: Calculates Louvain community identity for the top 20% of region x region connections above; depends on call_randind.py to calculate the mutual information between community assignments at various "resolution parameters" (gammas) to identify a stable community assignment. See *Community Detection Algorithm* in Supplementary Methods for more info.
 
 ### Visualizations
-7. figure_2.R:
-8. figure_3.R:
-9. figure_4.R:
-10. supplementary_figure_4.R:
-11. figure_5.R:
+12. figure_2.R:
+13. figure_3.R:
+14. figure_4.R:
+15. supp_fig_major_div_connectomes.R:
+16. figure_5.R:
 
