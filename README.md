@@ -46,9 +46,10 @@ Code for (10) and (11) provided by Lizette Herrera-Portillo from her recent manu
 11. `community_connectome_bin.m`: Calculates Louvain community identity for the top 20% of region x region connections above; uses `call_randind.py` to calculate the mutual information between community assignments at various "resolution parameters" (gammas) to identify a stable community assignment. See *Community Detection Algorithm* in Supplementary Methods for more info.
 
 ### Visualizations
-12. `figure_2.R`: Makes individual figure plots for Figure 2
-13. `figure_3.R`: Makes figure plots for Figure 3, Supplementary Figure 1, and Supplementary Figure 2.
-14. `supp_fig_major_div_connectomes.R`: Makes Supplementary Figures 3, 5, 6, and 8 based on the choice of connectome/binarization threshold.
-15. `figure_4.R`: Makes figure plots visualizing the changes in the full regionalized voxel model (Figure 4) or homogeneous model (Supplementary Figure 4) based on the choice of Oh vs. Knox connectome. Also makes Supplementary Figure 7 at a 5% binarization threshold.
-16. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
+12. `figure_1_workflow.R`: Makes Methods workflow (Figure 1)
+13. `figure_2.R`: Makes individual figure plots for Figure 2
+14. `figure_3.R`: Makes figure plots for Figure 3, Supplementary Figure 1, and Supplementary Figure 2.
+15. `supp_fig_major_div_connectomes.R`: Makes Supplementary Figures 3, 5, 6, and 8 based on the choice of connectome/binarization threshold.
+16. `figure_4.R`: Makes figure plots visualizing the changes in the full regionalized voxel model (Figure 4) or homogeneous model (Supplementary Figure 4) based on the choice of Oh vs. Knox connectome. Also makes Supplementary Figure 7 at a 5% binarization threshold.
+17. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
 
