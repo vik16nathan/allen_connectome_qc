@@ -17,10 +17,10 @@ All analyses were run on a Linux OS with the following packages/scripts download
 
 
 ## Quickstart to Reproduce Results
-Note that there are two stages: one before manual QC (downloading/thresholding/automated QC/making manual QC images) and one after manual QC. To reproduce our results, you can use our manual QC ratings provided within a subdirectory (stored as a .csv file). 
+Note that there are two stages: before manual QC (downloading/thresholding/automated QC/making manual QC images) and after manual QC (rebuilding connectomes/visualizing changes/graph theory analyses). To reproduce our results, you can use our manual QC ratings provided within a subdirectory (stored as a .csv file). 
 
-1. ./run-all-before-manual-QC.sh
-2. ./run-all-after-manual-QC.sh
+1. `./run-all-before-manual-QC.sh`
+2. `./run-all-after-manual-QC.sh`
 
 ## Full Analysis
 
