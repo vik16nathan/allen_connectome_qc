@@ -15,7 +15,14 @@ All analyses were run on a Linux OS with the following packages/scripts download
 * Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - download within working directory
 * `rstudio` version 2022.02.3+492: for visualizations
 
-## Analysis
+
+## Quickstart to Reproduce Results
+Note that there are two stages: one before manual QC (downloading/thresholding/automated QC/making manual QC images) and one after manual QC. To reproduce our results, you can use our manual QC ratings provided within a subdirectory (stored as a .csv file). 
+
+1. ./run-all-before-manual-QC.sh
+2. ./run-all-after-manual-QC.sh
+
+## Full Analysis
 
 ### Setup 
 1. `download_knox_conn_data.sh` : downloads all 3D volumes for injection_fraction, injection_density, and projection_density from the Allen API (For definitions of these quantities, see https://community.brain-map.org/t/api-allen-brain-connectivity/2988), to the directory specified at the top of the file. Uses `transform_space.py` (from Yohan Yee) to convert from Allen PIR --> RAS standard imaging coordinates (see manuscript for more info)
