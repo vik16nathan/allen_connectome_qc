@@ -1,0 +1,1 @@
+Contains scripts from the mouse_connectivity_models that are modified from their original versions. Should be placed in the same subdirectory within mouse_connectivity_models that the original files were placed within.
