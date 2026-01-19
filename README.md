@@ -25,7 +25,7 @@ Note that there are two stages: before manual QC (downloading/thresholding/autom
 ## Full Analysis
 
 ### Setup 
-1. `download_knox_conn_data.sh` : downloads all 3D volumes for injection_fraction, injection_density, and projection_density from the Allen API (For definitions of these quantities, see https://community.brain-map.org/t/api-allen-brain-connectivity/2988), to the directory specified at the top of the file. Uses `transform_space.py` (from Yohan Yee) to convert from Allen PIR --> RAS standard imaging coordinates (see manuscript for more info)
+1. `download_knox_conn_data.sh` : downloads all 3D volumes for injection_fraction, injection_density, and projection_density from the Allen API (For definitions of these quantities, see https://community.brain-map.org/t/api-allen-brain-connectivity/2988), to the directory specified at the top of the file. Uses `transform_space.py` (from Yohan Yee) to convert from Allen PIR --> RAS standard imaging coordinates (see manuscript for more info). Also downloads template/label files
 2. `multiply_threshold_inj_proj.sh`: multiplies injection fraction and injection density together (as was done in the code by Knox et al.); applies a binary threshold to the new multiplied injection density, and applies a binary threshold to the existing projection density to make these into "label files" for PyQC
 
 ### Automated QC
