@@ -19,8 +19,12 @@ All analyses were run on a Linux OS with the following packages/scripts download
 ## Quickstart to Reproduce Results
 Note that there are two stages: before manual QC (downloading/thresholding/automated QC/making manual QC images) and after manual QC (rebuilding connectomes/visualizing changes/graph theory analyses). To reproduce our results, you can use our manual QC ratings provided within a subdirectory (stored as a .csv file). 
 
-1. `./run-all-before-manual-QC.sh`
-2. `./run-all-after-manual-QC.sh`
+Within working directory:
+1. `mkdir preprocessed derivatives`
+2. `git clone https://github.com/vik16nathan/allen_connectome_qc/`
+3. `cd allen_connectome_qc`
+4. `./run-all-before-manual-QC.sh`
+5. `./run-all-after-manual-QC.sh`
 
 ## Full Analysis
 
