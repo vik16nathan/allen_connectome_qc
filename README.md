@@ -23,8 +23,8 @@ Within working directory:
 1. `mkdir preprocessed derivatives`
 2. `git clone https://github.com/vik16nathan/allen_connectome_qc/`
 3. `cd allen_connectome_qc`
-4. `./run-all-before-manual-QC.sh`
-5. `./run-all-after-manual-QC.sh`
+4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
+5. `./run-all-after-manual-QC.sh` (steps 6+ of full analysis)
 
 ## Full Analysis
 
