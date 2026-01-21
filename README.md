@@ -15,7 +15,7 @@ All analyses were run on a Linux OS with the following packages/scripts download
 * Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - download within working directory
 * `rstudio` version 2022.02.3+492: for visualizations
     * `install.packages("pacman")` to allow further package management/package downloads in subsequent R scripts
-* 
+* `ggslicer` for visualizations, within working directory (courtesy of Yohan Yee https://github.com/yohanyee/ggslicer) 
 
 
 ## Quickstart to Reproduce Results
