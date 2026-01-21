@@ -42,7 +42,7 @@ Within working directory:
 
 6. `compare_manual_qc_both_raters.R`: come up with a table of experiments with discrepancies across both raters, and each rater's rating. This facilitates easier discussion over consensus ratings for these images.
 
-7. `overall_qc_exclusion.R`: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. 
+7. `overall_qc_exclusion.R`: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. Uses outlier detection for right-skewed count data for automated QC (https://rpubs.com/dario-dellevedove/601843). 
 
 ### Rebuilding Connectomes
 8. `rebuild_knox_connectome.sh / rebuild_oh_connectome.sh`: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within `experiments_exclude.json` (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the new file replacing `experiments_exclude.json`.
