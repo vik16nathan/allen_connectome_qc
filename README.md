@@ -14,6 +14,8 @@ All analyses were run on a Linux OS with the following packages/scripts download
 * `make_slices_images.sh` (https://github.com/CoBrALab/make_slice_images) and PyQC for manual QC images (https://github.com/CoBrALab/PyQC)
 * Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - download within working directory
 * `rstudio` version 2022.02.3+492: for visualizations
+    * `install.packages("pacman")` to allow further package management/package downloads in subsequent R scripts
+* 
 
 
 ## Quickstart to Reproduce Results
@@ -30,7 +32,7 @@ Within working directory:
 
 ### Setup 
 1. `download_knox_conn_data.sh` : Downloads all 3D volumes for injection_fraction, injection_density, and projection_density from the Allen API (For definitions of these quantities, see https://community.brain-map.org/t/api-allen-brain-connectivity/2988), to the directory specified at the top of the file. Uses `transform_space.py` (from Yohan Yee) to convert from Allen PIR --> RAS standard imaging coordinates (see manuscript for more info). Downloads WT tracer experiments that were included and excluded in the connectome from Knox et al. into respective subdirectories. Also downloads template/label files. 
-2. `multiply_threshold_inj_proj.sh`: multiplies injection fraction and injection density together (as was done in the code by Knox et al.); applies a binary threshold to the new multiplied injection density, and applies a binary threshold to the existing projection density to make these into "label files" for PyQC
+2. `multiply_threshold_inj_proj.sh inj_thresh proj_thresh`: multiplies injection fraction and injection density together (as was done in the code by Knox et al.). Then, uses separate the numerical thresholds (between 0 and 1) provided as command-line arguments to binarize the injection and projection files before generating QC images for PyQC.
 
 ### Automated QC
 3. `create_automated_qc_csv.R`: calculates number of out-of-brain/ventricular projection voxels and overall injection and projection voxel counts for each experiment, based on the binarized files above. Note: overlaps with all ventricles except the third ventricle and cerebral aqueduct are considered, since these regions are too thin and prone to partial volume effects. Outputs results in "tables" subdirectory. 
