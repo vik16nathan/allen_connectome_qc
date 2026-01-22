@@ -31,9 +31,11 @@ Before running: make sure PyQC.py, mouse_connectivity_models, ggslicer, and Brai
 4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
 
 Manual QC: 
+
 5. Use `PyQC`; store QC .csv results in the same directory as the images being QCed. Take the QC .csv file from another rater and determine disagreements using `compare_manual_qc_both_raters.R`
 
 After Manual QC: 
+
 6. `./run-all-after-manual-QC.sh` (steps 7+ of full analysis)
 
 ## Full Analysis
