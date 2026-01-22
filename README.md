@@ -30,7 +30,7 @@ Before running: make sure PyQC.py, mouse_connectivity_models, ggslicer, and Brai
 
 4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
 
-Manual QC: These require manual adjustment to redo the QC. The final results from this QC are stored within the harmonized_ratings directory within this repo; to reproduce results, skip this step and go to `./run-all-after-manual-QC.sh`.
+Manual QC: These require manual adjustment to redo the QC. The final results from this QC are stored within the `harmonized_ratings` directory within this repo; to reproduce results, skip this step and go to `./run-all-after-manual-QC.sh`.
 
 5. Use `python PyQC.py` and select folders `../derivatives/knox_inj/bin0.5` and `../derivatives/knox_proj/bin0.1` (thresholds used for main results in the paper). Store results in the same directory as the images being QCed.
 6. `compare_manual_QC_both_raters.R`: Takes the QC .csv file from another rater and determines disagreements, before deciding on consensus ratings.
