@@ -38,7 +38,7 @@ Manual QC: These require manual adjustment to redo the QC. The final results fro
 
 After Manual QC: 
 
-7. `./run-all-after-manual-QC.sh` (steps 7+ of full analysis)
+8. `./run-all-after-manual-QC.sh` (steps 7+ of full analysis)
 
 ## Full Analysis
 
