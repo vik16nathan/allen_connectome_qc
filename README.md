@@ -28,6 +28,7 @@ Within working directory:
 4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
 5. `./run-all-after-manual-QC.sh` (steps 8+ of full analysis)
 
+The normalized connection strengths between regions in the rebuilt regionalized voxel model and homogeneous model are also both stored within this repository. 
 
 ## Full Analysis
 
