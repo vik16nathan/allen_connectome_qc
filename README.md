@@ -26,7 +26,8 @@ Within working directory:
 2. `git clone https://github.com/vik16nathan/allen_connectome_qc/`
 3. `cd allen_connectome_qc`
 4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
-5. `./run-all-after-manual-QC.sh` (steps 6+ of full analysis)
+5. Manual QC using `PyQC`; consensus comparison on disagreements using `compare_manual_qc_both_raters.R`
+6. `./run-all-after-manual-QC.sh` (steps 7+ of full analysis)
 
 ## Full Analysis
 
