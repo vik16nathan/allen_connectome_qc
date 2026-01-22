@@ -25,20 +25,9 @@ Within working directory:
 1. `mkdir preprocessed derivatives`
 2. `git clone https://github.com/vik16nathan/allen_connectome_qc/`
 3. `cd allen_connectome_qc`
-
-Before running: make sure PyQC.py, mouse_connectivity_models, ggslicer, and Brain Connectivity Toolbox are all downloaded within the `allen_connectome_qc` directory (see above). 
-
 4. `./run-all-before-manual-QC.sh` (steps 1-4 of full analysis)
+5. `./run-all-after-manual-QC.sh` (steps 8+ of full analysis)
 
-Manual QC: These require manual adjustment to redo the QC. The final results from this QC are stored within the `harmonized_ratings` directory within this repo; to reproduce results, skip this step and go to `./run-all-after-manual-QC.sh`.
-
-5. Use `python PyQC.py` and select folders `../derivatives/knox_inj/bin0.5` and `../derivatives/knox_proj/bin0.1` (thresholds used for main results in the paper). Store results in the same directory as the images being QCed.
-6. `compare_manual_QC_both_raters.R`: Takes the QC .csv file from another rater and determines disagreements, before deciding on consensus ratings.
-7. `write_harmonized_qc_ratings.R`: Writes the consensus QC ratings to a file with the same format as the original QC files (compatible with PyQC).
-
-After Manual QC: 
-
-8. `./run-all-after-manual-QC.sh` (steps 7+ of full analysis)
 
 ## Full Analysis
 
@@ -50,13 +39,17 @@ After Manual QC:
 3. `create_automated_qc_csv.R`: calculates number of out-of-brain/ventricular projection voxels and overall injection and projection voxel counts for each experiment, based on the binarized files above. Note: overlaps with all ventricles except the third ventricle and cerebral aqueduct are considered, since these regions are too thin and prone to partial volume effects. Outputs results in "tables" subdirectory. 
 
 ### Manual QC
+
+These steps require manual adjustment to redo the QC. The final results from this QC are stored within the `harmonized_ratings` directory within this repo; to reproduce results, skip this step and go to `./run-all-after-manual-QC.sh`.
+
 4. `make_qc_images_bin_threshold.sh`: makes all manual QC images using `make_slice_images.sh` (modified from https://github.com/CoBrALab/make_slice_images with _arg_row_width="5760" and _arg_row_height="1080" for higher-resolution images. Be sure to change binary thresholds to match whichever thresholds were chosen in (2); we use 0.5 for injection fraction and 0.1 for projection density by default
 
-5. Use PyQC: `python PyQC.py` to load the GUI; navigate to (1) the injection slice images (2) the projection slice images and separately QC using the numerical ratings outlined in the *Manual Quality Control* section of Nathan et al. Save the injection and projection QC results as separate .csv files.
+5. Use PyQC: `python PyQC.py` to load the GUI; navigate to (1) the injection slice images (2) the projection slice images by selecting folders `../derivatives/knox_inj/bin0.5` and `../derivatives/knox_proj/bin0.1` (thresholded QC files used for main results in the paper). Separately QC using the numerical ratings outlined in the *Manual Quality Control* section of Nathan et al. Store results in the same directory as the images being QCed and save the injection and projection QC results as separate .csv files. 
 
 6. `compare_manual_qc_both_raters.R`: come up with a table of experiments with discrepancies across both raters, and each rater's rating. This facilitates easier discussion over consensus ratings for these images.
+7. `write_harmonized_qc_ratings.R`: After discussion, writes the consensus QC ratings to a file with the same format as the original QC files (compatible with PyQC).
 
-7. `overall_qc_exclusion.R`: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. Uses outlier detection for right-skewed count data for automated QC (https://rpubs.com/dario-dellevedove/601843). 
+8. `overall_qc_exclusion.R`: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. Uses outlier detection for right-skewed count data for automated QC (https://rpubs.com/dario-dellevedove/601843). 
 
 ### Rebuilding Connectomes
 8. `rebuild_knox_connectome.sh / rebuild_oh_connectome.sh`: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within `experiments_exclude.json` (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the new file replacing `experiments_exclude.json`.
