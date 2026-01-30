@@ -2,7 +2,7 @@
 
 ## About
 
-This is the code to reproduce all results in *Experimental Quality Control Induces Changes in Allen Mouse Brain Connectomes* (Nathan et al., 2025). 
+This is the code to reproduce all results in *Experimental Quality Control Induces Changes in Allen Mouse Brain Connectomes* (Nathan et al., 2026). For all QC images and ratings, see Supplementary Data in Nathan et al., 2026.
 
 ## Dependencies
 
