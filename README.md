@@ -31,6 +31,32 @@ Within working directory:
 
 The normalized connection strengths between regions in the rebuilt regionalized voxel model and homogeneous model are also both stored within this repository. 
 
+## Loading Voxel-Level Connectomes
+Note: This was not in any of the analyses in Nathan et al., 2026; however, for anyone using the full voxel model from Knox et al., 2018, we recommend you use the rebuilt version (after `./run-all-after-manual-QC.sh`). 
+
+Within working directory, run the following code in Python, after installing AllenSDK:
+
+`
+from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
+from mcmodels.models.voxel import VoxelConnectivityArray
+import numpy as np
+
+mcc = MouseConnectivityCache(resolution=100) ###cannot change to anything but 100 
+annot, annot_info = mcc.get_annotation_volume()
+
+cache = VoxelModelCache(manifest_file='connectivity/voxel_model_manifest.json')
+
+_, source_mask, target_mask = cache.get_voxel_connectivity_array()
+source_mask_local=source_mask.coordinates
+target_mask_local=target_mask.coordinates
+
+nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
+weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
+voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
+
+`
+
+
 ## Full Analysis
 
 ### Setup 
