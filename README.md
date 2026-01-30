@@ -56,6 +56,8 @@ voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
 ```
 
+Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html.
+
 
 ## Full Analysis
 
