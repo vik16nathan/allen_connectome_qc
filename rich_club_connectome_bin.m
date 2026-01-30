@@ -1,22 +1,25 @@
-% load('demo_networks.mat')
-% from a connectivity matrix we want to obtain:
-% rich club: the rich club regime, which nodes are part of the rich club,
-% frequency of each node being part of the rich club.
-clear
-%%add path for Brain Connectivity Toolbox
-addpath("2019_03_03_BCT/");
-output_dir='/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/rich_club/';
-%%
-knox_rgn_conn_matrices=["../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv",...
-    "../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral_1018.csv"];
-knox_rgn_conn_suffixes=["old", "new_1018"];
+%%add path for Brain Connectivity Toolbox% Ensure MATLAB starts in the script folder
+cd(fileparts(mfilename('fullpath')))
+addpath('2019_03_03_BCT/');
+% Ensure MATLAB starts in the script folder
+output_dir='../derivatives/rich_club/';
 
-for percentile_threshold=[70, 80, 90]
-    for i=1:2 %%%run for old/new connectomes
+%%
+knox_rgn_conn_matrices={'../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
+
+knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_density'};
+
+
+%%for percentile_threshold=[70, 80, 90]
+for percentile_threshold=[80]
+    for i=1:numel(knox_rgn_conn_matrices) %%%run for old/new connectomes
         %%set same random seed
         rng(123); % Sets the seed to 123
-        knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices(i));
-        suffix=char(knox_rgn_conn_suffixes(i));
+        knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});
+        suffix=char(knox_rgn_conn_suffixes{i});
         %get rid of indices
         sc=knox_rgn_conn_matrix_original;
         sc=sc(2:size(sc,1),2:size(sc,2));
@@ -94,7 +97,7 @@ for percentile_threshold=[70, 80, 90]
         ax.LineWidth=1.5;
         set(gcf,'color','w');
         xlabel('Degree')
-        saveas(gcf, [output_dir,'rich_club_',suffix,'_pct',char(percentile_threshold),'.png']);
+        saveas(gcf, [output_dir,'rich_club_',suffix,'_pct',num2str(percentile_threshold),'.png']);
         hold off
         %% -------------------------------------------------------------------------
         % topological rich club regime: 
@@ -120,7 +123,7 @@ for percentile_threshold=[70, 80, 90]
         end
         richOrNot_mult_final=sum(richOrNot_mult,1);
         richOrNot_mult_final_ids_pctg=richOrNot_mult_final/max(richOrNot_mult_final(1,:));
-        save([output_dir,'knox_conn_',suffix,'_pct',char(percentile_threshold), '_richOrNot_pctg.mat'] , 'richOrNot_mult_final_ids_pctg');
+        save([output_dir,'knox_conn_',suffix,'_pct',num2str(percentile_threshold), '_richOrNot_pctg.mat'] , 'richOrNot_mult_final_ids_pctg');
         
         
         %% -------------------------------------------------------------------------
@@ -133,6 +136,6 @@ for percentile_threshold=[70, 80, 90]
                 richOrNot(i)=1;
             end
         end
-        save([output_dir,'knox_conn_',suffix,'_pct',char(percentile_threshold), '_richOrNot_topo.mat'],'richOrNot');
+        save([output_dir,'knox_conn_',suffix,'_pct',num2str(percentile_threshold), '_richOrNot_topo.mat'],'richOrNot');
     end
 end

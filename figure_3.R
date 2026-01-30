@@ -1,33 +1,21 @@
-library("dplyr")
-library("readr")
-library("readxl")
-library("stringr")
+library("pacman")
 library("RMINC")
-library("ggplot2")
-library("ggrepel")
-library("tidyr")
-library("ggalluvial")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions.R")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions_labels.R")
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/")
+pacman::p_load(dplyr, readr, readxl, stringr, ggrepel, tidyr, ggplot2, ggalluvial, tidyr)
+setwd(".")
+source("./ggslicer/plotting_functions/plotting_functions.R")
+source("./ggslicer/plotting_functions/plotting_functions_labels.R")
 
 ###find the intended injection region for each tracer (and major division)
 
-allen_input_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/allen_template_inputs/"
-allen_tracer_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/knox_connectome_tracers/"
+allen_input_dir <- "../preprocessed/allen_template_inputs/"
+allen_tracer_dir <- "../preprocessed/knox_connectome_tracers/"
 ##50 microns
-aba_label_filepath <- paste0(allen_input_dir, "AMBA_relabeled_25um_resampled_50um_int.mnc")
+aba_label_filepath <- paste0(allen_input_dir, "AMBA_25um_resampled_50um_int.mnc")
 aba_label_file <- round(mincGetVolume(aba_label_filepath))
-
-###create a dictionary to eventually index 3D voxel coords --> 1D RMINC volume coord
-#########DO THIS IN PYTHON. IDK WHY THIS IS PRODUCING A SHORT FILE###########
-#aba_key_vol <- c(1:length(aba_label_file))
-#mincWriteVolume(as.integer(aba_key_vol), paste0(allen_input_dir,"aba_50um_1D_index_key.mnc"), clobber=TRUE, dtype=int, like=aba_label_filepath)
-
 
 ##load primary injection sites for each experiment + filled in two missing experiments
 #modified version of query.csv: see fill_in_missing_knox_tracer_regions.R
-tracer_sites <- as.data.frame(read_csv("/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/misc/knox_tracer_ids_inj_regions_full.csv"))
+tracer_sites <- as.data.frame(read_csv(paste0(allen_input_dir,"knox_tracer_ids_inj_regions_full.csv")))
 
 ###organize region numbers --> names --> major subdivisions
 #load the dictionary from label numbers <-- --> region acronyms
@@ -50,12 +38,12 @@ find_major_division <- function(label, major_division_dict, aba_region_labels) {
 #############Compare manual vs. automated QC tracers (with regions)###########
 ##original Knox conn tracer list before removal
 ##load list of Knox connectome tracers
-knox_experiments_included <- as.data.frame(read.csv("knox_experiments_included.csv"))
+knox_experiments_included <- as.data.frame(read.csv("knox_experiment_csvs/knox_experiments_included.csv"))
 ###remove missing experiment
 knox_experiments_included <- as.data.frame(knox_experiments_included[which(knox_experiments_included$id != 310207648),])
 colnames(knox_experiments_included) <- "id"
 ##experiments to remove
-tracer_removal_df <- as.data.frame(read_csv("tracers_to_remove.csv", col_names=TRUE))
+tracer_removal_df <- as.data.frame(read_csv("tables/tracers_to_remove_adjboxStats_skew_outliers.csv", col_names=TRUE))
 
 ###add major_division column for each tracer
 # join tracer_removal_df with tracer_sites by Tracer ↔ id
@@ -196,7 +184,7 @@ left_counts <- alluv_df %>%
     label_y = center - gap
   )
 
-left_counts <- left_counts[which(left_counts$n > 2),]
+left_counts <- left_counts[which(left_counts$n > 3),]
 
 # --- Right-hand counts (QC failure mode totals) ---
 right_counts <- alluv_df %>%
@@ -211,42 +199,89 @@ right_counts <- alluv_df %>%
     gap = max(n) * 0.1,
     label_y = center - gap
   ) %>%
-  filter(n > 2)   # same filtering rule as left_counts
+  filter(n > 3)   # same filtering rule as left_counts
 
 
-# If you prefer the n=... inside the box bottom rather than below, set label_y = bottom + 0.02*n
+stratum_labels <- ggplot_build(
+  ggplot(alluv_df,
+         aes(axis1 = major_division,
+             axis2 = first_removal,
+             y = freq)) +
+    geom_stratum(width = 0.3)
+)$data[[1]]
+
 
 # Build the plot: left axis = Major division, right axis = first_removal (Removal criterion)
-p <- ggplot(alluv_df, aes(axis1 = major_division, axis2 = first_removal, y = freq)) +
-  geom_alluvium(aes(fill = major_division), width = 0.3, knot.pos = 0.5) +
-  geom_stratum(width = 0.3, fill = "grey90", color = "black") +
-  # labels for the stratum names (inside the stratum boxes)
-  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 9) +
-  # add n=... labels under the left-hand (major division) strata using the precomputed positions
-  geom_text(
+p <- ggplot(alluv_df,
+            aes(axis1 = major_division,
+                axis2 = first_removal,
+                y = freq)) +
+
+  geom_alluvium(aes(fill = major_division),
+                width = 0.3,
+                knot.pos = 0.5) +
+
+  geom_stratum(width = 0.3,
+               fill = "grey90",
+               color = "black") +
+
+  ## --- STRATUM LABELS (repelled, per ggalluvial vignette) ---
+  geom_text_repel(
+    data = stratum_labels,
+    aes(x = x, y = y, label = stratum),
+    inherit.aes = FALSE,
+    size = 9,
+    direction = "y",
+    nudge_x = ifelse(stratum_labels$x == 1, -0.35, 0.35),
+    segment.color = "grey40",
+    box.padding = 0.3,
+    min.segment.length = 0
+  ) +
+
+  ## --- LEFT n= labels ---
+  geom_text_repel(
     data = left_counts,
-    mapping = aes(x = 1, y = label_y, label = paste0("n=", n)),
+    aes(x = 1, y = label_y, label = paste0("n=", n)),
     inherit.aes = FALSE,
     size = 7,
-    hjust = 0.5
+    nudge_x = -0.35,
+    min.segment.length = 0,
+    segment.color = NA
+
+
   ) +
-  # Add right-side n=... labels for each removal criterion
-  geom_text(
+
+  ## --- RIGHT n= labels ---
+  geom_text_repel(
     data = right_counts,
-    mapping = aes(x = 2, y = label_y, label = paste0("n=", n)),
+    aes(x = 2, y = label_y, label = paste0("n=", n)),
     inherit.aes = FALSE,
     size = 7,
-    hjust = 0.5
+    nudge_x=0.35,
+    min.segment.length = 0,
+    segment.color = NA
   ) +
-  scale_x_discrete(limits = c("Major division", "Removal criterion"), expand = c(.05, .05)) +
+
+  scale_x_discrete(
+    limits = c("Major division", "Removal criterion"),
+    expand = c(.05, .05)
+  ) +
+
   scale_fill_manual(values = div_cols, na.value = "grey50") +
-  labs(y = "Number of tracers", x = NULL,
-       title = "Sankey (alluvial) of tracers removed by first QC criterion, grouped by major division") +
+
+  labs(
+    y = "Number of tracers",
+    x = NULL,
+    title = "Sankey (alluvial) of tracers removed by first QC criterion, grouped by major division"
+  ) +
+
   theme_void(base_size = 30) +
   theme(legend.position = "right")
+
 p
-# Save (same as you used previously)
+
 ggsave("figures/fig_3a_removed_tracers_sankey.png", p, dpi = 300, width = 24, height = 14)
+
 
 
 # =========================
@@ -340,7 +375,7 @@ p <- ggplot(df_long, aes(x = Metric, y = Tracer, fill = type)) +
   )
 
 # Save if desired
-ggsave("figures/supp_figure_3a_heatmap.png", p, width = 24, height = 16, dpi = 300)
+ggsave("figures/supp_fig_1_heatmap.png", p, width = 24, height = 16, dpi = 300)
 
 ####################look at overall ABA regions with removed tracers###########################
 df_with_structures <- tracer_removal_df 
@@ -371,20 +406,21 @@ matched_idx <- match(aba_label_file, structure_IDs$`structure-id`)
 aba_label_file_knox_regions[!is.na(matched_idx)] <- structure_IDs$n[matched_idx[!is.na(matched_idx)]]
 
 ####write out output volumes
-mincWriteVolume(aba_label_file_missing_regions, like=aba_label_filepath, "overall_excluded_tracer_regions.mnc")
+vol_output_dir="../derivatives/excluded_tracer_aggregate_volumes/"
+mincWriteVolume(aba_label_file_missing_regions, like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions.mnc"))
 ####save the RATIO of missing injections to total injections within each region
 output_ratio_vol <- rep(0, length(aba_label_file))
 output_ratio_vol[which(aba_label_file_knox_regions > 0)] <- 
   aba_label_file_missing_regions[which(aba_label_file_knox_regions > 0)]/aba_label_file_knox_regions[which(aba_label_file_knox_regions > 0)]
 mincWriteVolume(output_ratio_vol, 
-                like=aba_label_filepath, "overall_excluded_tracer_regions_ratio.mnc")
+                like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions_ratio.mnc"))
 
 
 ####visualize using Yohan's visualization script
-allen_template_path_50um <- "/data/chamal/projects/yohan/common/allenbrain/data/mouse_atlas/ccfv3/average_template_50.mnc"
-allen_mask_path_50um <- "/data/chamal/projects/yohan/common/allenbrain/data/mouse_atlas/ccfv3/mask_50um.mnc"
+allen_template_path_50um <- paste0(allen_input_dir, "average_template_50.mnc")
+allen_mask_path_50um <- paste0(allen_input_dir, "mask_50um.mnc")
 allen_50um_template_df <- prepare_masked_anatomy(allen_template_path_50um, allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
-excluded_rgn_df <- prepare_masked_anatomy("./overall_excluded_tracer_regions.mnc", allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
+excluded_rgn_df <- prepare_masked_anatomy(paste0(vol_output_dir,"./overall_excluded_tracer_regions.mnc"), allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
 
 allen_50um_template_df <- allen_50um_template_df %>% filter(mask_value == 1)
 excluded_rgn_df <- excluded_rgn_df %>% filter(mask_value == 1) %>% filter(intensity > 0)
@@ -424,12 +460,10 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
     title = "Injection Regions with Excluded Tracers", # Add title
   )
 
-ggsave("figures/figure_3b_inj_rgn.png", p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
+ggsave("figures/supp_fig_2a_inj_rgn_counts.png", p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
 
 #######REPEAT FOR RATIO######################
-excluded_rgn_df <- prepare_masked_anatomy("./overall_excluded_tracer_regions_ratio.mnc", allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
-
-allen_50um_template_df <- allen_50um_template_df %>% filter(mask_value == 1)
+excluded_rgn_df <- prepare_masked_anatomy(paste0(vol_output_dir,"overall_excluded_tracer_regions_ratio.mnc"), allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
 excluded_rgn_df <- excluded_rgn_df %>% filter(mask_value == 1) %>% filter(intensity > 0)
 
 # Combine "slice_world" with "y" for unique facet labels
@@ -469,94 +503,16 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
 
 ggsave("figures/figure_3b_inj_rgn_ratio.png", p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
 
-############Look at missing injection centroid voxels overlaid inj. frac.#####
-###rewrite Knox injection centroid function in R
-###original function: https://github.com/AllenInstitute/mouse_connectivity_models/blob/master/mcmodels/core/utils.py
-compute_centroid <- function(injection_density) {
-  # injection_density: 3D array (x_ccf, y_ccf, z_ccf)
-  # returns centroid coordinates in index space
-  
-  # find indices of non-zero entries
-  nnz_idx <- which(injection_density != 0, arr.ind = TRUE)
-  
-  # extract corresponding values
-  vals <- injection_density[nnz_idx]
-  
-  # compute weighted centroid
-  centroid <- colSums(nnz_idx * vals) / sum(vals)
-  
-  return(centroid)
-}
-
-
-aba_key_vol <- round(mincGetVolume(paste0(allen_input_dir,"AMBA_50um_int_voxel_labels.mnc")))
-aba_missing_centroids_vol <- rep(0, length(aba_key_vol))
-aba_key_vol_array <- mincArray(aba_key_vol)
-
-for(tracer in tracer_removal_df$Tracer)  {
-  injection_density <- mincArray(mincGetVolume(paste0(allen_tracer_dir, "/",tracer,"/injection_dens_times_frac.mnc")))
-  centroid <- compute_centroid(injection_density)
-  coords <- round(centroid)
-  centroid_1d_index <- aba_key_vol_array[coords[1], coords[2], coords[3]]
-  aba_missing_centroids_vol[centroid_1d_index] <- 1
-}
-mincWriteVolume(aba_missing_centroids_vol, "knox_missing_inj_centroids.mnc", like=aba_label_filepath)
-###visualize missing injection centroids... dilated a few times
-
-allen_template_path_50um <- "/data/chamal/projects/yohan/common/allenbrain/data/mouse_atlas/ccfv3/average_template_50.mnc"
-allen_mask_path_50um <- "/data/chamal/projects/yohan/common/allenbrain/data/mouse_atlas/ccfv3/mask_50um.mnc"
-allen_50um_template_df <- prepare_masked_anatomy(allen_template_path_50um, allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
-excluded_rgn_df <- prepare_masked_anatomy("./knox_missing_inj_centroids_dil2.mnc", allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
-
-allen_50um_template_df <- allen_50um_template_df %>% filter(mask_value == 1)
-excluded_rgn_df <- excluded_rgn_df %>% filter(mask_value == 1) %>% filter(intensity > 0)
-
-# Combine "slice_world" with "y" for unique facet labels
-excluded_rgn_df <- excluded_rgn_df %>% 
-  mutate(facet_label = paste0("y = ", y))
-
-p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
-  geom_raster(mapping = aes(fill = intensity), interpolate = TRUE) +
-  scale_fill_gradient(
-    low = 'black',
-    high = 'white',
-    oob = scales::squish,
-    guide = 'none'
-  ) +
-  ggnewscale::new_scale_fill() + 
-  geom_tile(data = excluded_rgn_df, mapping = aes(fill = factor(intensity))) +
-  scale_fill_manual(
-    values = c("1" = "red"),
-    breaks = c("1"),
-    name = "Removed injection centroid",
-    drop = FALSE
-  ) + 
-  scale_x_continuous(expand = c(0, 0)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  facet_wrap(~ slice_world, ncol = 4, labeller = labeller(slice_world = function(x) paste0("Slice: ", x))) +  
-  coord_fixed(ratio = 1) +
-  theme_void(base_size=30) +
-  theme(
-    panel.spacing = unit(0, "npc"),                     # Keep spacing minimal
-    strip.text = element_text(size = 16, face = "bold"), # Increase facet label text size
-    plot.title = element_text(size = 24, face = "bold", hjust = 0.5), # Make title bigger and center it
-    plot.subtitle = element_text(size = 20, hjust = 0.5, face = "italic") # Make subtitle bigger and center it
-  ) +
-  labs(
-    title = "Injection Centroids for Excluded Tracers", # Add title
-  )
-
-
 ###########Look at missing projection density (overall, binary > 0.1)##########
-aba_missing_proj_vol <- rep(0, length(aba_key_vol))
+aba_missing_proj_vol <- rep(0, length(aba_label_file))
 for(tracer in tracer_removal_df$Tracer)  {
   projection_density_bin0.1 <- mincArray(mincGetVolume(paste0(allen_tracer_dir, "/",tracer,"/projection_density_bin0.1.mnc")))
   aba_missing_proj_vol[which(projection_density_bin0.1 > 0)] <- aba_missing_proj_vol[which(projection_density_bin0.1 > 0)] +1
 }
 
-mincWriteVolume(aba_missing_proj_vol, "knox_lost_proj_density_bin0.1.mnc", like=aba_label_filepath)
+mincWriteVolume(aba_missing_proj_vol, paste0(vol_output_dir,"knox_lost_proj_density_bin0.1.mnc"), like=aba_label_filepath)
 ###count the overall number of experiments @ each voxel; divide the map above
-aba_overall_proj_vol <- rep(0, length(aba_key_vol))
+aba_overall_proj_vol <- rep(0, length(aba_label_file))
 for(tracer in knox_experiments_included$id)  {
   if(tracer == 310207648) { #missing data
     next
@@ -566,15 +522,12 @@ for(tracer in knox_experiments_included$id)  {
 }
 
 ###calculate volume fraction of missing vs. non-missing experiments @ each voxel
-aba_missing_proj_vol_ratio <- rep(0, length(aba_key_vol))
+aba_missing_proj_vol_ratio <- rep(0, length(aba_label_file))
 aba_missing_proj_vol_ratio[which(aba_overall_proj_vol > 0)] <- aba_missing_proj_vol[which(aba_overall_proj_vol > 0)] / aba_overall_proj_vol[which(aba_overall_proj_vol > 0)]
-mincWriteVolume(aba_missing_proj_vol_ratio, "knox_lost_proj_density_ratio_bin0.1.mnc", like=aba_label_filepath)
+mincWriteVolume(aba_missing_proj_vol_ratio, paste0(vol_output_dir,"knox_lost_proj_density_ratio_bin0.1.mnc"), like=aba_label_filepath)
 
 ###visualize missing proj. densities
-allen_template_path_50um <- "/data/chamal/projects/yohan/common/allenbrain/data/mouse_atlas/ccfv3/average_template_50.mnc"
-allen_50um_template_df <- prepare_masked_anatomy(allen_template_path_50um, allen_mask_path_50um, "y", seq(-7.5, 5, 1))[[2]]
-allen_50um_template_df <- allen_50um_template_df %>% filter(mask_value == 1)
-excluded_rgn_df <- prepare_anatomy("./knox_lost_proj_density_bin0.1.mnc", "y", seq(-7.5, 5, 1))[[2]]
+excluded_rgn_df <- prepare_anatomy(paste0(vol_output_dir,"./knox_lost_proj_density_bin0.1.mnc"), "y", seq(-7.5, 5, 1))[[2]]
 excluded_rgn_df <- excluded_rgn_df %>%filter(intensity > 0)
 
 # Combine "slice_world" with "y" for unique facet labels
@@ -611,11 +564,11 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
   labs(
     title = "Number of Experiments with Excluded Projection > 0.1", # Add title
   )
-ggsave("figures/figure_3b_proj_voxels.png", p, width=24, height=16, dpi=300)
+ggsave("figures/supp_fig_2b_proj_voxels.png", p, width=24, height=16, dpi=300)
 
 
 ###visualize lost projection density ratio @ each voxel
-excluded_rgn_df <- prepare_anatomy("./knox_lost_proj_density_ratio_bin0.1.mnc", "y", seq(-7.5, 5, 1))[[2]]
+excluded_rgn_df <- prepare_anatomy(paste0(vol_output_dir,"./knox_lost_proj_density_ratio_bin0.1.mnc"), "y", seq(-7.5, 5, 1))[[2]]
 excluded_rgn_df <- excluded_rgn_df %>%filter(intensity > 0)
 
 # Combine "slice_world" with "y" for unique facet labels

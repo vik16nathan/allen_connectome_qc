@@ -2,17 +2,20 @@
 % find communities using Louvain algorithm
 %--------------------------------------------------------------------------
 %%load whole-brain REGIONALIZED structural connectivity .csv 
+cd(fileparts(mfilename('fullpath')))
 addpath("2019_03_03_BCT/");
-output_dir='/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/community_louvain/';
-rich_club_dir='/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/rich_club/';
+output_dir='../derivatives/community_louvain/';
+rich_club_dir='../derivatives/rich_club/';
 %%
-knox_rgn_conn_matrices=["../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv",...
-    "../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral_1018.csv"];
+knox_rgn_conn_matrices={'../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
+    '../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
 
-knox_rgn_conn_suffixes=["old", "new_1018"];
+knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_density'};
 %Repeat analysis for old vs. new connectomes
-%TODO: Make sure gamma with the most stable clustering (largest cluster of high mutual information)
-% remains the same b/t old and new connectomes
+%For consistency, assign gamma with the most stable clustering (largest cluster of high mutual information)
+%as the same (gamma index=21) b/t old and new connectomes
 %%right now, assuming it's the same @ 21 for both connectomes
 %stick this in the supplement
 
@@ -20,12 +23,13 @@ knox_rgn_conn_suffixes=["old", "new_1018"];
 %Binary threshold for minimal agreement across gammas to visualize
 agreement_thresh=0.5; 
 %%
-for percentile_threshold=[70, 80, 90]
+%%for percentile_threshold=[70, 80, 90]
+for percentile_threshold=[80]
     for i=1:numel(knox_rgn_conn_matrices)
         %%binarize structural connectivity
-        knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices(i));
+        knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});
         knox_rgn_conn_names=knox_rgn_conn_matrix_original(1,2:size(knox_rgn_conn_matrix_original, 2));
-        suffix=char(knox_rgn_conn_suffixes(i));
+        suffix=char(knox_rgn_conn_suffixes{i});
         %get rid of indices
         sc=knox_rgn_conn_matrix_original;
         sc=sc(2:size(sc,1),2:size(sc,2));
@@ -52,7 +56,7 @@ for percentile_threshold=[70, 80, 90]
                     [ci(:,igam,irep),q(igam,irep)] = community_louvain(B,gamvals(igam),[],[]);
             end
             citemp = squeeze(ci(:,igam,:)); 
-            if igam==15 %%TODO: ask Liz about this
+            if igam==15 %%make plot at a single igam to represent community assignments
                figure
                imagesc(citemp)
                colormap(jet)
@@ -94,9 +98,9 @@ for percentile_threshold=[70, 80, 90]
         rand_input_mat_path=[output_dir,'rand_input_',suffix,'.mat'];
         save(rand_input_mat_path,'ciu');
         %run this in a separate shell
-        system(['python3 /data/chamal/projects/natvik/knox_qc_full_06232025/analysis/call_randind.py --matfile ', rand_input_mat_path, ' --flag 1 --suffix ', suffix]);
+        system(['python3 call_randind.py --matfile ', rand_input_mat_path, ' --flag 1 --suffix ', suffix]);
         %%
-        x=load(['/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/community_louvain/rand_output_',suffix,'.mat']);
+        x=load(['../derivatives/community_louvain/rand_output_',suffix,'.mat']);
         %%
         ami_thr=0.9:0.005:1;
         ami_matrix=x.a;
@@ -143,7 +147,7 @@ for percentile_threshold=[70, 80, 90]
         colorbar;
         set(gcf,'color','w');
         axis square;
-        saveas(gcf,[output_dir,'adjusted_mutual_inf_',suffix,'_pct',string(percentile_threshold),'.png']);
+        saveas(gcf,[output_dir,'adjusted_mutual_inf_',suffix,'_pct',num2str(percentile_threshold),'.png']);
         
         %% -------------------------------------------------------------------------
         % Select gamma and particion data
@@ -194,7 +198,7 @@ for percentile_threshold=[70, 80, 90]
         metadata.names=knox_rgn_conn_names;
         %metadata.Id=unique(Source);
         metadata.Id=1:n;
-        writetable(nodes_table,[output_dir, 'gephi_source_target_',suffix,'_pct',string(percentile_threshold),'.csv']);
+        writetable(nodes_table,[output_dir, 'gephi_source_target_',suffix,'_pct',num2str(percentile_threshold),'.csv']);
         
         %% define participantion coeff
         P_out=participation_coef(sc,metadata.comm_assign,1);
@@ -209,10 +213,10 @@ for percentile_threshold=[70, 80, 90]
         %% -------------------------------------------------------------------------
         % Save updated csv with all new metadata + rich club
         %--------------------------------------------------------------------------
-        rich_club_pct=load([rich_club_dir,'knox_conn_',suffix, '_pct',percentile_threshold, '_richOrNot_pctg.mat']);
+        rich_club_pct=load([rich_club_dir,'knox_conn_',suffix, '_pct',num2str(percentile_threshold), '_richOrNot_pctg.mat']);
         metadata.rich_club_pct=rich_club_pct.richOrNot_mult_final_ids_pctg;
     
-        rich_club_topo=load([rich_club_dir,'knox_conn_',suffix,'_pct',percentile_threshold, '_richOrNot_topo.mat']);
+        rich_club_topo=load([rich_club_dir,'knox_conn_',suffix,'_pct',num2str(percentile_threshold), '_richOrNot_topo.mat']);
         metadata.rich_club_topo=rich_club_topo.richOrNot;
         % include rich club assignments from rich_club_vikram.m
         names = fieldnames(metadata);
@@ -223,6 +227,6 @@ for percentile_threshold=[70, 80, 90]
         end
         
         % Write to CSV
-        writetable(T, [output_dir,'metadata_community_rich_club_',suffix,'_pct',percentile_threshold,'.csv']);  % change filename as needed
+        writetable(T, [output_dir,'metadata_community_rich_club_',suffix,'_pct',num2str(percentile_threshold),'.csv']);  % change filename as needed
     end
 end

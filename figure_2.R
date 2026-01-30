@@ -1,19 +1,11 @@
 ########################Vikram Nathan, 08/13/2025##########################
 ###prerequisites: run create_automated_qc_csv.R with threshold of interest##
-
-library("dplyr")
-library("readr")
-library("readxl")
-library("stringr")
-library("foreach")
-library("doParallel")
+library("pacman")
 library("RMINC")
-library("ggplot2")
-library("ggrepel")
-library("tidyr")
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions.R")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions_labels.R")
+pacman::p_load(dplyr, readr, readxl, stringr, foreach, doParallel, ggplot2, ggrepel, tidyr)
+setwd(".")
+source("./ggslicer/plotting_functions/plotting_functions.R")
+source("./ggslicer/plotting_functions/plotting_functions_labels.R")
 
 inj_thresh <- 0.5
 proj_thresh <- 0.1
@@ -21,7 +13,7 @@ allen_50um_template_path <- "../preprocessed/allen_template_inputs/average_templ
 allen_mask_path_50um <- "../preprocessed/allen_template_inputs/mask_50um.mnc"
 vent_path <- "../preprocessed/allen_template_inputs/vent_voxels_label_file_50um_filt.mnc"
 ##directory containing .mnc files
-tracer_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/knox_connectome_tracers/"
+tracer_dir <- "../preprocessed/knox_connectome_tracers/"
 
 ##################HELPER FUNCTIONS#############################################
 #####function to plot tracer + template at slice coordinate using Yohan's vis#####
@@ -191,9 +183,11 @@ plot_tracer_inj_slice <- function(tracer, tracer_dir, slice_coords, inj_thresh, 
 
 ###############HISTOGRAMS OF OOB and VENT VOXELS: FIGURE 2A##############
 ###read in data
-zscore_thresh <- 4
-tracer_num_vox_oob_vent_df <- as.data.frame(read.csv(paste0("tables/knox_oob_vent_df_inj",inj_thresh,"_proj",proj_thresh,"_1018.csv")))
+tracer_num_vox_oob_vent_df <- as.data.frame(read.csv(paste0("tables/knox_oob_vent_df_inj",inj_thresh,"_proj",proj_thresh,".csv")))
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$tracer != 310207648),]
+qc_table_removal_full <- as.data.frame(read_csv("tables/tracers_to_remove_adjboxStats_skew_outliers.csv"))
+oob_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto OOB Proj."] == 1), "Tracer"]
+vent_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto Vent Proj."] == 1), "Tracer"]
 
 # Step 1: Gather all 4 vectors into a long dataframe with labels
 long_df <- tracer_num_vox_oob_vent_df %>%
@@ -216,14 +210,25 @@ bin_breaks <- function(x) {
   seq(min(x), max(x), length.out = 51)
 }
 
-# Apply binning and tag upper-tail outliers (e.g., top 5%)
+# Apply binning and tag upper-tail outliers (identified previously using robustbase)
 long_df <- long_df %>%
   group_by(facet_label) %>%
   mutate(
     bin = cut(value, breaks = bin_breaks(value), include.lowest = TRUE),
-    upper_tail = scale(value) >= zscore_thresh,
+
+    upper_tail = case_when(
+      facet_label == "OOB Voxels, Projection > 0.1" &
+        tracer %in% oob_outliers ~ TRUE,
+
+      facet_label == "Ventricular Voxels, Projection > 0.1" &
+        tracer %in% vent_outliers ~ TRUE,
+
+      TRUE ~ FALSE
+    ),
+
     tracer_label = ifelse(upper_tail, tracer, NA)
   )
+
 
 p <- ggplot(long_df, aes(x = value, fill = type)) +
   geom_histogram(bins = 50, color = "black", alpha = 0.7) +
@@ -276,14 +281,18 @@ ggsave("figures/figure_2a_180296424.png", p, width = 16, height = 16, dpi = 300)
 ##################FIGURE 2B###############################################
 ##load automated QC for previously removed experiments
 tracer_num_vox_oob_vent_df_prev <- as.data.frame(read.csv(paste0("tables/knox_oob_vent_df_inj",inj_thresh,"_proj",proj_thresh,"_orig_removed.csv")))
-# Step 1: Identify SD outliers
+# Step 1: Identify outliers (robust) after automated QC: overall_qc_exclusion.R
+qc_table_removal_full <- as.data.frame(read_csv("tables/tracers_to_remove_adjboxStats_skew_outliers.csv"))
+inj_size_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto Large Inj."] == 1), "Tracer"]
+proj_size_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto Large Proj."] == 1), "Tracer"]
+
 zscore_thresh <- 4
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
   mutate(
-    sd_outlier = abs(scale(inj_num_vox)) > zscore_thresh | abs(scale(proj_num_vox)) > zscore_thresh,
+    sd_outlier = tracer %in% inj_size_outliers | tracer %in% proj_size_outliers,
     # Categorize outlier type (including overlapping cases)
     outlier_type = case_when(
-      sd_outlier ~ "> 4 SDs",
+      sd_outlier ~ "Large Inj/Proj.",
       TRUE ~ "None"
     ),
     
@@ -296,7 +305,7 @@ p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) 
   geom_point(aes(color = outlier_type),size=6) +
   scale_color_manual(values = c(
     "None" = "black",
-    "> 4 SDs" = "red"
+    "Large Inj/Proj." = "red"
   )) +
   geom_text_repel(aes(label = label), size = 15, na.rm = TRUE) +  # increase label size
   labs(
@@ -311,13 +320,13 @@ ggsave("figures/figure_2b_scatterplot.png", p, width=20, height=16, dpi=300)
 # Step 4: Plot with updated legend and label
 p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) +
   # Main dataset (current)
-  geom_point(aes(color = outlier_type), size = 4) +
+  geom_point(aes(color = outlier_type), size = 6) +
   
   # Overlay previously removed experiments in darkorange (with legend entry)
   geom_point(
     data = tracer_num_vox_oob_vent_df_prev,
     aes(x = inj_num_vox, y = proj_num_vox, color = "Removed Knox et al."),
-    size = 4,
+    size = 6,
     shape = 17
   ) +
   
@@ -326,7 +335,7 @@ p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) 
     name = "Removal Type",
     values = c(
       "None" = "black",
-      "> 4 SDs" = "red",
+      "Large Inj/Proj." = "red",
       "Removed Knox et al." = "darkorange"
     )
   ) +
@@ -339,41 +348,7 @@ p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) 
   theme_minimal(base_size = 45)
 
 # Save updated plot
-ggsave("figures/figure_2b_scatterplot_with_prev.png", p, width = 24, height = 16, dpi = 300)
-
-
-
-##################FIGURE 2B###############################################
-# Step 1: Identify SD outliers (unchanged)
-zscore_thresh <- 4
-tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
-  mutate(
-    sd_outlier = abs(scale(inj_num_vox)) > zscore_thresh | abs(scale(proj_num_vox)) > zscore_thresh
-  )
-
-# Step 2: Flag "bottom-corner" points
-tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
-  mutate(
-    inj_rank  = dplyr::min_rank(inj_num_vox),
-    proj_rank = dplyr::min_rank(proj_num_vox),
-    bottom_corner = replace_na(inj_rank <= 4 | proj_rank <= 2, FALSE)
-  )
-
-# Step 3: Plot — draw blue first, then red on top
-p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) +
-  # base layer: all "normal" tracers in blue
-  geom_point(data = subset(tracer_num_vox_oob_vent_df, !sd_outlier & !bottom_corner),
-             color = "blue", size = 8) +
-  # overlay: red points (both >4 SD and bottom corner)
-  geom_point(data = subset(tracer_num_vox_oob_vent_df, sd_outlier | bottom_corner),
-             color = "red", size = 8) +
-  labs(
-    x = "Injection Voxel Count",
-    y = "Projection Voxel Count"
-  ) +
-  theme_minimal(base_size = 60) +
-  theme(legend.position = "none")  # remove legend completely
-ggsave("figures/figure_1_scatterplot_schematic.png", p, width = 20, height = 16, dpi = 300)
+ggsave("figures/figure_2b_scatterplot_with_prev.png", p, width = 30, height = 16, dpi = 300)
 
 ###########PLOT REPRESENTATIVE TRACERS########################
 tracer <- 174957972
@@ -420,7 +395,7 @@ sorted_df <- sorted_df %>%
 inj_cutoff_val <- max(sorted_df$inj_num_vox[sorted_df$ColorGroup == "Bottom 9"], na.rm = TRUE)
 
 p <- ggplot(sorted_df, aes(x = Rank, y = inj_num_vox, color = ColorGroup, shape = ColorGroup)) +
-  geom_point(size = 6) +
+  geom_point(size = 8) +
   scale_color_manual(values = c("Bottom 9" = "red", "Prev" = "darkorange", "Others" = "blue")) +
   scale_shape_manual(values = c("Bottom 9" = 16, "Prev" = 17, "Others" = 16)) +
   geom_hline(yintercept = inj_cutoff_val, linetype = "dashed", color = "black") +
@@ -428,7 +403,7 @@ p <- ggplot(sorted_df, aes(x = Rank, y = inj_num_vox, color = ColorGroup, shape 
     data = subset(sorted_df, ColorGroup %in% c("Bottom 9", "Prev")),
     aes(label = tracer, color = ColorGroup),
     nudge_y = 0.2 * max(sorted_df$inj_num_vox),
-    size = 10,
+    size = 15,
     show.legend = FALSE
   ) +
   labs(
@@ -438,7 +413,7 @@ p <- ggplot(sorted_df, aes(x = Rank, y = inj_num_vox, color = ColorGroup, shape 
   ) +
   theme_minimal(base_size = 40)
 
-ggsave("figures/figure_2c_smallest_inj.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_2c_smallest_inj.png", p, width = 20, height = 16, dpi = 300)
 
 
 ##############2C: SMALL PROJ DENSITIES##############################
@@ -459,7 +434,7 @@ sorted_df <- sorted_df %>%
 proj_cutoff_val <- max(sorted_df$proj_num_vox[sorted_df$ColorGroup == "Bottom 4"], na.rm = TRUE)
 
 p <- ggplot(sorted_df, aes(x = Rank, y = proj_num_vox, color = ColorGroup, shape = ColorGroup)) +
-  geom_point(size = 6) +
+  geom_point(size = 8) +
   scale_color_manual(values = c("Bottom 4" = "red", "Prev" = "darkorange", "Others" = "blue")) +
   scale_shape_manual(values = c("Bottom 4" = 16, "Prev" = 17, "Others" = 16)) +
   geom_hline(yintercept = proj_cutoff_val, linetype = "dashed", color = "black") +
@@ -467,7 +442,7 @@ p <- ggplot(sorted_df, aes(x = Rank, y = proj_num_vox, color = ColorGroup, shape
     data = subset(sorted_df, ColorGroup %in% c("Bottom 4", "Prev")),
     aes(label = tracer, color = ColorGroup),
     nudge_y = 0.2 * max(sorted_df$proj_num_vox),
-    size = 10,
+    size = 15,
     show.legend = FALSE
   ) +
   labs(
@@ -477,7 +452,7 @@ p <- ggplot(sorted_df, aes(x = Rank, y = proj_num_vox, color = ColorGroup, shape
   ) +
   theme_minimal(base_size = 40)
 
-ggsave("figures/figure_2c_smallest_proj.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_2c_smallest_proj.png", p, width = 20, height = 16, dpi = 300)
 
 
 

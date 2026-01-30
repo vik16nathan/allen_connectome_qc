@@ -1,29 +1,20 @@
-library("tidyverse")
-library("pheatmap")
-library("dplyr")
-library("readr")
-library("readxl")
-library("patchwork")
-library("R.matlab")
-library("ggrepel")
-library("patchwork")
-library("RColorBrewer")
-library("RMINC")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions.R")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions_labels.R")
+library("pacman")
+pacman::p_load(tidyverse, pheatmap, dplyr, readr, readxl, patchwork, ggrepel, RColorBrewer)
+setwd(".")
 
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/")
+###LOAD VISUALIZATION SCRIPTS, ARGUMENTS; SET PATHS AND INPUTS#############
+source("./ggslicer/plotting_functions/plotting_functions.R")
+source("./ggslicer/plotting_functions/plotting_functions_labels.R")
 allen_input_dir <- "../preprocessed/allen_template_inputs/"
 
-binary_pct_threshold <- 0.2 ##top 5% of connections kept for visualization
-output_fig_dir_knox <- "/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/figures/"
-output_fig_dir_oh <- "/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/figures/oh/original_regions/"
+output_fig_dir_knox <- "./figures/"
+output_fig_dir_oh <- "./figures/oh/"
+args <- commandArgs(trailingOnly=TRUE)
+knox_or_oh <- args[1]
+binary_pct_threshold <- as.numeric(args[2])
 
-aba_region_filepath <- paste0(allen_input_dir, "allen_ccfv3_tree_wang_2020_s2.xlsx")
-aba_region_labels <- as.data.frame(read_excel(aba_region_filepath))  # Replace with your actual file path
-colnames(aba_region_labels) <- aba_region_labels[1,]
-aba_region_labels <- aba_region_labels[2:nrow(aba_region_labels),]
-
+##########################################################################################
+##########################HELPER FUNCTION################################################
 binarize_regionalized_conn_contra_ipsi <- function(knox_conn_contra, knox_conn_ipsi, thresh_prop=0.2) {
   knox_conn_full <- cbind(knox_conn_ipsi, knox_conn_contra)
   unlisted_conn <- unlist(knox_conn_full)
@@ -42,14 +33,16 @@ binarize_regionalized_conn_contra_ipsi <- function(knox_conn_contra, knox_conn_i
   
   list(knox_conn_contra_binary, knox_conn_ipsi_binary)
 }
-knox_conn_old <- as.data.frame(read_csv("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_density.csv"))
+################################################################################################
+
+knox_conn_old <- as.data.frame(read_csv("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_density_original.csv"))
 knox_conn_region_numbers <- knox_conn_old[2:nrow(knox_conn_old),1]
 ####load parcellated Knox/Oh connectomes (old vs. rerun)
 knox_conn_contra_old <- read.csv("../derivatives/regionalized_connectomes/knox_conn_contra_old.csv", check.names=FALSE, row.names=1)
 knox_conn_ipsi_old   <- read.csv("../derivatives/regionalized_connectomes/knox_conn_ipsi_old.csv", check.names=FALSE, row.names=1)
 
-knox_conn_contra_new <- read.csv("../derivatives/regionalized_connectomes/knox_conn_contra_new_1018.csv", check.names=FALSE, row.names=1)
-knox_conn_ipsi_new   <- read.csv("../derivatives/regionalized_connectomes/knox_conn_ipsi_new_1018.csv", check.names=FALSE, row.names=1)
+knox_conn_contra_new <- read.csv("../derivatives/regionalized_connectomes/knox_conn_contra_new.csv", check.names=FALSE, row.names=1)
+knox_conn_ipsi_new   <- read.csv("../derivatives/regionalized_connectomes/knox_conn_ipsi_new.csv", check.names=FALSE, row.names=1)
 
 oh_conn_contra_old   <- read.csv("../derivatives/regionalized_connectomes/oh_conn_contra_old_211.csv", check.names=FALSE, row.names=1)
 oh_conn_ipsi_old     <- read.csv("../derivatives/regionalized_connectomes/oh_conn_ipsi_old_211.csv", check.names=FALSE, row.names=1)
@@ -59,27 +52,30 @@ oh_conn_ipsi_new     <- read.csv("../derivatives/regionalized_connectomes/oh_con
 
 #################TOGGLE BETWEEN KNOX/OH CONNECTOMES HERE#######################
 ##original: don't exclude any of the regions
-fig_dir <- output_fig_dir_oh
-
-
 knox_conn_ipsi_regions_in_oh <- rownames(knox_conn_ipsi_old)[which(rownames(knox_conn_ipsi_old) %in% rownames(oh_conn_ipsi_old))]
 knox_conn_contra_regions_in_oh <- colnames(knox_conn_contra_old)[which(colnames(knox_conn_contra_old) %in% colnames(oh_conn_contra_old))]
 
-connectome_dir <- "/data/chamal/projects/natvik/SIR_rerun_ohbm_11272025/derivatives/connectomes/"
-oh_conn_old <- as.data.frame(read_csv(paste0(connectome_dir,"homogeneous-standard-model_old_211.csv")))
+connectome_dir <- "mouse_connectivity_models/paper/figures/model_comparison/output/"
+oh_conn_old <- as.data.frame(read_csv(paste0(connectome_dir,"homogeneous-standard-model_original.csv")))
 oh_conn_region_numbers <- oh_conn_old[2:nrow(oh_conn_old),1]
 
-conn_region_numbers <- oh_conn_region_numbers
-conn_ipsi_old <- oh_conn_ipsi_old
-conn_contra_old <- oh_conn_contra_old
-conn_ipsi_new <- oh_conn_ipsi_new
-conn_contra_new <- oh_conn_contra_new
+if(knox_or_oh == "oh") {
+  fig_dir <- output_fig_dir_oh
+  conn_region_numbers <- oh_conn_region_numbers
+  conn_ipsi_old <- oh_conn_ipsi_old
+  conn_contra_old <- oh_conn_contra_old
+  conn_ipsi_new <- oh_conn_ipsi_new
+  conn_contra_new <- oh_conn_contra_new
+}
 
-#conn_region_numbers <- knox_conn_region_numbers
-#conn_ipsi_old <- knox_conn_ipsi_old
-#conn_contra_old <- knox_conn_contra_old
-#conn_ipsi_new <- knox_conn_ipsi_new
-#conn_contra_new <- knox_conn_contra_new
+if(knox_or_oh == "knox") {
+  fig_dir <- output_fig_dir_knox
+  conn_region_numbers <- knox_conn_region_numbers
+  conn_ipsi_old <- knox_conn_ipsi_old
+  conn_contra_old <- knox_conn_contra_old
+  conn_ipsi_new <- knox_conn_ipsi_new
+  conn_contra_new <- knox_conn_contra_new
+}
 
 ######################START HERE################################################
 ###########reorganize all functions here to run on Oh vs. Knox connectomes######
@@ -227,7 +223,7 @@ p <- pheatmap(code,
               border_color = NA,
               fontsize=30)
 
-ggsave(paste0(fig_dir,"figure_4a_ipsi_heatmap_1018_bin", binary_pct_threshold,".png"), p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
+ggsave(paste0(fig_dir,"figure_4b_ipsi_heatmap_bin", binary_pct_threshold,".png"), p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
 
 
 #############REPEAT FOR CONTRA############################
@@ -294,7 +290,7 @@ p <- pheatmap(code,
               border_color = NA,
               fontsize=30)
 
-ggsave(paste0(fig_dir,"figure_4a_contra_heatmap_1018_bin",binary_pct_threshold, ".png"), p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
+ggsave(paste0(fig_dir,"figure_4b_contra_heatmap_bin",binary_pct_threshold, ".png"), p, width = 24, height = 16, dpi = 300)  # adjust width/height as needed
 
 
 #############REPEAT FOR CONNECTION STRENGTHS/RATIOS###########################
@@ -400,7 +396,7 @@ p <- pheatmap(
 )
 
 p
-ggsave(paste0(fig_dir,"ipsi_conn_strength_diff_z_heatmap.png"), p, width = 20, height = 16, dpi = 300)  # adjust width/height as needed
+ggsave(paste0(fig_dir,"fig_4a_ipsi_conn_strength_diff_z_heatmap.png"), p, width = 20, height = 16, dpi = 300)  # adjust width/height as needed
 
 ##########################repeat for contra###########################
 md  <- row_major_divisions
@@ -446,5 +442,5 @@ p <- pheatmap(
   breaks = my_breaks
 )
 p
-ggsave(paste0(fig_dir,"contra_conn_strength_diff_z_heatmap.png"), p, width = 20, height = 16, dpi = 300)  # adjust width/height as needed
+ggsave(paste0(fig_dir,"fig_4a_contra_conn_strength_diff_z_heatmap.png"), p, width = 20, height = 16, dpi = 300)  # adjust width/height as needed
 

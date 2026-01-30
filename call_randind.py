@@ -19,7 +19,7 @@ def parse_args():
 
 if __name__== '__main__':
 
-    output_dir='/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/community_louvain/'
+    output_dir='../derivatives/community_louvain/'
     inputs=parse_args()
     mat = scipy.io.loadmat(inputs.matfile)
     if inputs.flag==0:

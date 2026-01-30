@@ -1,24 +1,18 @@
-library("tidyverse")
-library("pheatmap")
-library("dplyr")
-library("readr")
-library("readxl")
-library("patchwork")
-library("R.matlab")
-library("ggrepel")
-library("patchwork")
-library("RMINC")
-library("scales")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions.R")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions_labels.R")
+library("pacman")
+pacman::p_load(tidyverse, pheatmap, dplyr, readr, readxl, patchwork, ggrepel, scales)
 
 
 ###SET DIRECTORY PATHS AND HYPERPARAMETERS
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/")
+setwd(".")
 allen_input_dir <- "../preprocessed/allen_template_inputs/"
-binary_pct_threshold <- 0.2 ##0.2 --> only keep the top 20% of connections, etc.
-output_fig_dir_knox <- "/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/figures/"
-output_fig_dir_oh <- "/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/figures/oh/original_regions/"
+source("./ggslicer/plotting_functions/plotting_functions.R")
+source("./ggslicer/plotting_functions/plotting_functions_labels.R")
+output_supp_fig_dir_knox <- "figures/"
+output_supp_fig_dir_oh <- "figures/oh/"
+
+args <- commandArgs(trailingOnly=TRUE)
+knox_or_oh <- args[1]
+binary_pct_threshold <- as.numeric(args[2])
 
 ###organize region numbers --> names --> major subdivisions
 #load the dictionary from label numbers <-- --> region acronyms
@@ -60,36 +54,36 @@ binarize_regionalized_conn_contra_ipsi <- function(knox_conn_contra, knox_conn_i
   list(knox_conn_contra_binary, knox_conn_ipsi_binary)
 }
 ####load parcellated Knox connectomes (old vs. rerun)
-knox_conn_old <- as.data.frame(read_csv("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength.csv"))
+knox_conn_old <- as.data.frame(read_csv("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength_original.csv"))
 knox_conn_region_numbers <- knox_conn_old[2:nrow(knox_conn_old),1]
 
-knox_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength.csv")
+knox_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength_original.csv")
 knox_conn_contra_old <- knox_conn_contra_ipsi[[1]]
 knox_conn_ipsi_old <- knox_conn_contra_ipsi[[2]]
 
-knox_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength_rebuilt_1018.csv")
+knox_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi("mouse_connectivity_models/paper/connectivity/voxel-standard-model/normalized_connection_strength_rebuilt.csv")
 knox_conn_contra_new <- knox_conn_contra_ipsi[[1]]
 knox_conn_ipsi_new <- knox_conn_contra_ipsi[[2]]
 
 write.csv(knox_conn_contra_old, "../derivatives/regionalized_connectomes/knox_conn_contra_old.csv", row.names=TRUE)
 write.csv(knox_conn_ipsi_old, "../derivatives/regionalized_connectomes/knox_conn_ipsi_old.csv", row.names=TRUE)
 
-write.csv(knox_conn_contra_new, "../derivatives/regionalized_connectomes/knox_conn_contra_new_1018.csv", row.names=TRUE)
-write.csv(knox_conn_ipsi_new, "../derivatives/regionalized_connectomes/knox_conn_ipsi_new_1018.csv", row.names=TRUE)
+write.csv(knox_conn_contra_new, "../derivatives/regionalized_connectomes/knox_conn_contra_new.csv", row.names=TRUE)
+write.csv(knox_conn_ipsi_new, "../derivatives/regionalized_connectomes/knox_conn_ipsi_new.csv", row.names=TRUE)
 
 ###repeat for Oh connectomes#############################
 ####load parcellated Oh connectomes (old vs. rerun)
 ##NOTE: changed directories to rerun w/ 211 regions for OHBM abstract (more similar to original 213 regions)
 ##not the same as taking the 291 mesoscale regions --> looking at original OH regions (only 203 regions kept)
-connectome_dir <- "/data/chamal/projects/natvik/SIR_rerun_ohbm_11272025/derivatives/connectomes/"
-oh_conn_old <- as.data.frame(read_csv(paste0(connectome_dir,"homogeneous-standard-model_old_211.csv")))
+connectome_dir <- "mouse_connectivity_models/paper/figures/model_comparison/output/"
+oh_conn_old <- as.data.frame(read_csv(paste0(connectome_dir,"homogeneous-standard-model_original.csv")))
 oh_conn_region_numbers <- oh_conn_old[2:nrow(oh_conn_old),1]
 
-oh_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi(paste0(connectome_dir,"homogeneous-standard-model_old_211.csv"))
+oh_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi(paste0(connectome_dir,"homogeneous-standard-model_original.csv"))
 oh_conn_contra_old <- oh_conn_contra_ipsi[[1]]
 oh_conn_ipsi_old <- oh_conn_contra_ipsi[[2]]
 
-oh_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi(paste0(connectome_dir,"homogeneous-standard-model_new_1018.csv"))
+oh_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi(paste0(connectome_dir,"homogeneous-standard-model_rebuilt.csv"))
 oh_conn_contra_new <- oh_conn_contra_ipsi[[1]] 
 oh_conn_ipsi_new <- oh_conn_contra_ipsi[[2]]
 
@@ -105,19 +99,23 @@ write.csv(oh_conn_ipsi_new, "../derivatives/regionalized_connectomes/oh_conn_ips
 #knox_conn_ipsi_regions_in_oh <- rownames(knox_conn_ipsi_old)[which(rownames(knox_conn_ipsi_old) %in% rownames(oh_conn_ipsi_old))]
 #knox_conn_contra_regions_in_oh <- colnames(knox_conn_contra_old)[which(colnames(knox_conn_contra_old) %in% colnames(oh_conn_contra_old))]
 
-#fig_dir <- output_fig_dir_oh
-#conn_region_numbers <- oh_conn_region_numbers
-#conn_ipsi_old <- oh_conn_ipsi_old
-#conn_contra_old <- oh_conn_contra_old
-#conn_ipsi_new <- oh_conn_ipsi_new
-#conn_contra_new <- oh_conn_contra_new
+if(knox_or_oh == "oh") {
+  supp_fig_dir <- output_supp_fig_dir_oh
+  conn_region_numbers <- oh_conn_region_numbers
+  conn_ipsi_old <- oh_conn_ipsi_old
+  conn_contra_old <- oh_conn_contra_old
+  conn_ipsi_new <- oh_conn_ipsi_new
+  conn_contra_new <- oh_conn_contra_new
+}
 
-fig_dir <- output_fig_dir_knox
-conn_region_numbers <- knox_conn_region_numbers
-conn_ipsi_old <- knox_conn_ipsi_old
-conn_contra_old <- knox_conn_contra_old
-conn_ipsi_new <- knox_conn_ipsi_new
-conn_contra_new <- knox_conn_contra_new
+if(knox_or_oh == "knox") {
+  supp_fig_dir <- output_supp_fig_dir_knox
+  conn_region_numbers <- knox_conn_region_numbers
+  conn_ipsi_old <- knox_conn_ipsi_old
+  conn_contra_old <- knox_conn_contra_old
+  conn_ipsi_new <- knox_conn_ipsi_new
+  conn_contra_new <- knox_conn_contra_new
+}
 
 ######################START HERE################################################
 ###########reorganize all functions here to run on Oh vs. Knox connectomes######
@@ -187,7 +185,7 @@ conn_contra_new_bin <- bin_list[[1]]
 conn_ipsi_new_bin <- bin_list[[2]]
 
 ################################################################################
-##########Supplementary Figure: Distribution of Connection Strengths############
+##########Supplementary supp_figure: Distribution of Connection Strengths############
 
 ########change these lines to work with Knox vs. Oh connectome#############
 # Function to replace outliers beyond 3*SD with max non-outlier
@@ -324,15 +322,15 @@ plot_hist_conn_strength <- function(vals_old, vals_new, output_dir) {
     theme_minimal(base_size = 30) +
     theme(legend.position = "top")
   
-  ggsave(paste0(output_dir, "supp_fig_hist_conn_strength_median.png"), p,
+  ggsave(paste0(output_dir, "supp_supp_fig_hist_conn_strength_median.png"), p,
          width = 32, height = 16, dpi = 300)
   
 }
 
-plot_hist_conn_strength(vals_old, vals_new, fig_dir)
+plot_hist_conn_strength(vals_old, vals_new, supp_fig_dir)
 
 ################################################################################
-##########FIGURE 4A: Diff. of New vs. Old Connection Strengths##################
+##########supp_figURE 4A: Diff. of New vs. Old Connection Strengths##################
 make_md_table_mean <- function(row_levels, col_levels,
                                row_div_map, col_div_map, vals,
                                na.rm = TRUE, fill = NA_real_) {
@@ -460,16 +458,16 @@ md  <- row_major_divisions
 md_col <- ipsi_col_major_divisions
 md_col_contra <- contra_col_major_divisions
 p_ipsi <- make_diff_major_div_heatmap(diff_ipsi_pct, md, md_col)
-ggsave(paste0(fig_dir, "figure_4a_diff_pct_ipsi.png"), p_ipsi, width = 20, height = 16, dpi = 300)
+ggsave(paste0(supp_fig_dir, "supp_figure_4a_diff_pct_ipsi.png"), p_ipsi, width = 20, height = 16, dpi = 300)
 
 p_contra <- make_diff_major_div_heatmap(diff_contra_pct, md, md_col_contra)
-ggsave(paste0(fig_dir, "figure_4a_diff_pct_contra.png"), p_contra, width = 20, height = 16, dpi = 300)
+ggsave(paste0(supp_fig_dir, "supp_figure_4a_diff_pct_contra.png"), p_contra, width = 20, height = 16, dpi = 300)
 
 
 ###########repeat for contra##################
 
 ################################################################################
-###########FIGURE 4B: CONDENSED HEATMAPS WITH CHANGES IN BINARIZED CONNECTOMES#########
+###########supp_figURE 4B: CONDENSED HEATMAPS WITH CHANGES IN BINARIZED CONNECTOMES#########
 ##################HELPER FUNCTIONS#######################################
 # Helper to build major div. x major div. table from index pairs
 make_md_table <- function(i_idx, j_idx, row_levels, col_levels,
@@ -663,7 +661,7 @@ md  <- row_major_divisions
 md_col <- ipsi_col_major_divisions
 
 p <- make_condensed_major_div_heatmap(mat_old, mat_new, mat_diff, md, md_col)
-ggsave(paste0(fig_dir,"figure_4a_ipsi_bin",binary_pct_threshold,".png"), p,
+ggsave(paste0(supp_fig_dir,"supp_figure_4a_ipsi_bin",binary_pct_threshold,".png"), p,
        width = 16, height = 16, dpi = 300)
 
 ##repeat for contra
@@ -673,23 +671,5 @@ mat_diff <- mat_new - mat_old  # +1 gained, -1 lost
 md  <- row_major_divisions
 md_col <- contra_col_major_divisions
 p <- make_condensed_major_div_heatmap(mat_old, mat_new, mat_diff, md, md_col)
-ggsave(paste0(fig_dir,"figure_4a_contra_bin",binary_pct_threshold,".png"), p,
+ggsave(paste0(supp_fig_dir,"supp_figure_4a_contra_bin",binary_pct_threshold,".png"), p,
        width = 16, height = 16, dpi = 300)
-##############MISCELLANEOUS#######################
-###correlate old vs. new regionalized connectomes
-##compare
-num_rgns <- nrow(conn_ipsi_old)
-corr_old_new_source_conn_ipsi <- c()
-for(i in c(1:num_rgns)) { corr_old_new_source_conn_ipsi <- c(corr_old_new_source_conn_ipsi,
-                                                             cor(as.numeric(conn_ipsi_old[i,]), as.numeric(conn_ipsi_new[i,]))) }
-corr_old_new_source_conn_contra <- c()
-for(i in c(1:num_rgns)) { corr_old_new_source_conn_contra <- c(corr_old_new_source_conn_contra,
-                                                               cor(as.numeric(conn_contra_old[i,]), as.numeric(conn_contra_new[i,]))) }
-
-###create a data frame containing the region number, correlation b/t old vs. new,
-###and major division
-region_corr_major_division_df <- data.frame(label=conn_region_numbers,
-                                            major_division=row_major_divisions,
-                                            ipsi_corr=corr_old_new_source_conn_ipsi,
-                                            contra_corr=corr_old_new_source_conn_contra)
-

@@ -1,0 +1,2 @@
+./rebuild_oh_connectome.sh "experiments_exclude_updated.json" "../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt"
+./rebuild_knox_connectome.sh "experiments_exclude_updated.json" 

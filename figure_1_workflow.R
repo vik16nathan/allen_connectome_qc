@@ -1,27 +1,54 @@
 ########################Vikram Nathan, 08/13/2025##########################
 ###prerequisites: run create_automated_qc_csv.R with threshold of interest##
 
-library("dplyr")
-library("readr")
-library("readxl")
-library("stringr")
-library("foreach")
-library("doParallel")
+library("pacman")
 library("RMINC")
-library("ggplot2")
-library("ggrepel")
-library("tidyr")
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions.R")
-source("/data/chamal/projects/natvik/sir_voxel/analysis/ggslicer/plotting_functions/plotting_functions_labels.R")
+pacman::p_load(dplyr, readr, readxl, stringr, foreach, doParallel, ggplot2, ggrepel, tidyr)
+setwd(".")
+source("./ggslicer/plotting_functions/plotting_functions.R")
+source("./ggslicer/plotting_functions/plotting_functions_labels.R")
 
 inj_thresh <- 0.5
 proj_thresh <- 0.1
 allen_50um_template_path <- "../preprocessed/allen_template_inputs/average_template_50.mnc"
-allen_50um_mask_path <- "/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/allen_template_inputs/mask_50um.mnc"
+allen_50um_mask_path <- "../preprocessed/allen_template_inputs/mask_50um.mnc"
 ##directory containing .mnc files
-tracer_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/knox_connectome_tracers/"
+tracer_dir <- "../preprocessed/knox_connectome_tracers/"
 
+###########1B scatterplot schematic (removing largest/smallest inj/proj)#####
+##################FIGURE 2B###############################################
+tracer_num_vox_oob_vent_df <- as.data.frame(read.csv(paste0("tables/knox_oob_vent_df_inj",inj_thresh,"_proj",proj_thresh,".csv")))
+tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$tracer != 310207648),]
+# Step 1: Identify SD outliers (unchanged)
+zscore_thresh <- 4
+tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
+  mutate(
+    sd_outlier = abs(scale(inj_num_vox)) > zscore_thresh | abs(scale(proj_num_vox)) > zscore_thresh
+  )
+
+# Step 2: Flag "bottom-corner" points
+tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
+  mutate(
+    inj_rank  = dplyr::min_rank(inj_num_vox),
+    proj_rank = dplyr::min_rank(proj_num_vox),
+    bottom_corner = replace_na(inj_rank <= 4 | proj_rank <= 2, FALSE)
+  )
+
+# Step 3: Plot — draw blue first, then red on top
+p <- ggplot(tracer_num_vox_oob_vent_df, aes(x = inj_num_vox, y = proj_num_vox)) +
+  # base layer: all "normal" tracers in blue
+  geom_point(data = subset(tracer_num_vox_oob_vent_df, !sd_outlier & !bottom_corner),
+             color = "blue", size = 8) +
+  # overlay: red points (both >4 SD and bottom corner)
+  geom_point(data = subset(tracer_num_vox_oob_vent_df, sd_outlier | bottom_corner),
+             color = "red", size = 8) +
+  labs(
+    x = "Injection Voxel Count",
+    y = "Projection Voxel Count"
+  ) +
+  theme_minimal(base_size = 60) +
+  theme(legend.position = "none")  # remove legend completely
+ggsave("figures/figure_1_scatterplot_schematic.png", p, width = 20, height = 16, dpi = 300)
 
 ##############PLOT BRAIN MASK/VENTRICLE MASK#######################
 
@@ -33,7 +60,7 @@ allen_template_df <- allen_template_df %>% filter(mask_value == 1)
 mask_df <- prepare_anatomy(allen_50um_mask_path, "y", slice_coords)[[2]]
 mask_df <- mask_df %>% filter(intensity > 0)
 
-ventricle_df <- prepare_anatomy("/data/chamal/projects/natvik/knox_qc_full_06232025/preprocessed/allen_template_inputs/vent_voxels_label_file_50um_filt.mnc", "y", slice_coords)[[2]]
+ventricle_df <- prepare_anatomy("../preprocessed/allen_template_inputs/vent_voxels_label_file_50um_filt.mnc", "y", slice_coords)[[2]]
 ventricle_df <- ventricle_df %>% filter(intensity > 0)
 
 # Combine "slice_world" with "y" for unique facet labels
@@ -85,7 +112,7 @@ p <- ggplot(data = allen_template_df, mapping = aes(x = x, y = z)) +
     plot.title = element_text(size = 54, face = "bold", hjust = 0.5), # Make title bigger and center it
   ) 
 
-ggsave("figures/fig1_mask_vent.png", p, width=16, height=16, dpi=300)
+ggsave("figures/fig1c_mask_vent.png", p, width=16, height=16, dpi=300)
 
 #####functions to plot tracer + template at slice coordinate using Yohan's vis#####
 ####################################################################################
@@ -190,25 +217,21 @@ plot_tracer_inj_slice <- function(tracer, tracer_dir, slice_coords, inj_thresh, 
 #####plot representative slices for each QC failure mode 
 tracer <- 158914182
 p <- plot_tracer_inj_slice(tracer, tracer_dir, -3.04, 0.5, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_1_158914182.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_1e_158914182.png", p, width = 16, height = 16, dpi = 300)
 
 
 tracer <- 100148443
 p <- plot_tracer_proj_slice(tracer, tracer_dir, -3.6, 0.1, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_1_100148443.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_1g_100148443.png", p, width = 16, height = 16, dpi = 300)
 
 tracer <- 112670853
 p <- plot_tracer_proj_slice(tracer, tracer_dir, 0.9, 0.1, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_2a_112670853.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_1h_112670853.png", p, width = 16, height = 16, dpi = 300)
 
 tracer <- 158257355
 p <- plot_tracer_proj_slice(tracer, tracer_dir, -2.75, 0.1, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_2a_158257355.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_1f_158257355.png", p, width = 16, height = 16, dpi = 300)
 
-tracer <- 180435652
+tracer <- 174957972
 p <- plot_tracer_proj_slice(tracer, tracer_dir, -1, 0.1, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_2a_180435652.png", p, width = 16, height = 16, dpi = 300)
-
-tracer <- 158314987
-p <- plot_tracer_proj_slice(tracer, tracer_dir, -2.6, 0.1, allen_50um_template_path, allen_50um_mask_path)
-ggsave("figures/figure_2a_158314987.png", p, width = 16, height = 16, dpi = 300)
+ggsave("figures/figure_1d_174957972.png", p, width = 16, height = 16, dpi = 300)

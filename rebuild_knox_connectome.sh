@@ -1,7 +1,7 @@
 #!/bin/bash
 
-cd ./mouse_connectivity_models/
 source .venv/bin/activate
-#python3 ./paper/figures/model_comparison/build_model_new_excluded_cortex.py
-python3 ./paper/figures/model_comparison/build_model_new_excluded.py
-#python3 ./paper/figures/model_comparison/build_model.py
+excluded_exps_file=$1
+suffix=$2
+python3 build_model_new_excluded.py ${excluded_exps_file} ${suffix}
+

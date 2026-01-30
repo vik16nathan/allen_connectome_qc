@@ -1,6 +1,5 @@
-library("dplyr")
-library("readr")
-library("tidyr")
+library("pacman")
+pacman::p_load(dplyr, readr, tidyr)
 
 ##load Steph's qc csv
 steph_qc_csv <- as.data.frame(read_delim("/data/chamal/projects/stephanie/collaborations/vikram-qc-full.csv", delim="/"))
@@ -11,8 +10,8 @@ steph_proj_qc <- as.data.frame(cbind(as.numeric(substr(steph_qc_csv[,3], 1,9)), 
 colnames(steph_proj_qc) <- c("tracer","rating")
 
 ###load Vikram's qc csv's (one for inj, one for proj)
-knox_inj_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/knox_inj/bin0.5/"
-knox_proj_dir <- "/data/chamal/projects/natvik/knox_qc_full_06232025/derivatives/knox_proj/bin0.1/"
+knox_inj_dir <- "../derivatives/knox_inj/bin0.5/"
+knox_proj_dir <- "../derivatives/knox_proj/bin0.1/"
 vikram_inj_qc <- as.data.frame(read_csv(paste0(knox_inj_dir, "knox_inj_prod_bin0.5_qc.csv"), col_names=FALSE))
 vikram_proj_qc <- as.data.frame(read_csv(paste0(knox_proj_dir,"knox_proj_bin0.1_qc.csv"), col_names=FALSE))
 vikram_inj_qc_cropped <- as.data.frame(read_csv(paste0(knox_inj_dir,"cropped/knox_inj_prod_bin0.5_qc_cropped.csv"), col_names=FALSE))
@@ -45,29 +44,6 @@ colnames(vikram_steph_proj_qc) <- c("file","tracer", "vikram_rating", "steph_rat
 proj_tracers_to_flag <- vikram_steph_proj_qc[which(vikram_steph_proj_qc$vikram_rating != vikram_steph_proj_qc$steph_rating),]
 
 ######write out comparison files############
-setwd("/data/chamal/projects/natvik/knox_qc_full_06232025/analysis/qc_comparison_with_steph/")
+setwd("./harmonized_ratings/")
 write.table(inj_tracers_to_flag, "vikram_steph_inj_qc_differences.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE)
 write.table(proj_tracers_to_flag, "vikram_steph_proj_qc_differences.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE)
-
-
-############LOAD HARMONIZED QC TO CREATE FINAL QC CSV########################
-harmonized_qc_inj <- read_csv("vikram_steph_inj_qc_differences_harmonized.csv",col_names=FALSE)
-harmonized_qc_proj <- read_csv("vikram_steph_proj_qc_differences_harmonized.csv",col_names=FALSE)
-colnames(harmonized_qc_inj) <- c("file", "tracer", "vikram_rating", "steph_rating", "harmonized", "comments")
-colnames(harmonized_qc_proj) <- c("file", "tracer", "vikram_rating", "steph_rating", "harmonized", "comments")
-
-vikram_inj_qc <- as.data.frame(read_csv(paste0(knox_inj_dir, "knox_inj_prod_bin0.5_qc.csv"), col_names=FALSE))
-vikram_proj_qc <- as.data.frame(read_csv(paste0(knox_proj_dir,"knox_proj_bin0.1_qc.csv"), col_names=FALSE))
-
-colnames(vikram_inj_qc) <- c("file", "tracer", "rating", "extra")
-colnames(vikram_proj_qc) <-  c("file", "tracer", "rating", "extra")
-
-vikram_inj_qc_final <- vikram_inj_qc
-vikram_inj_qc_final[which(vikram_inj_qc_final$tracer %in% harmonized_qc_inj$tracer), "rating"] <- harmonized_qc_inj$harmonized
-
-vikram_proj_qc_final <- vikram_proj_qc
-vikram_proj_qc_final[which(vikram_proj_qc_final$tracer %in% harmonized_qc_proj$tracer), "rating"] <- harmonized_qc_proj$harmonized
-
-write.table(vikram_inj_qc_final, "knox_inj_prod_bin0.5_qc_harmonized.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE, na="")
-write.table(vikram_proj_qc_final, "knox_proj_bin0.1_qc_harmonized.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE, na="")
-
