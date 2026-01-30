@@ -61,6 +61,8 @@ Then, follow all instructions in https://mouse-connectivity-models.readthedocs.i
 
 ## Full Analysis
 
+Note that there are additional patching/cleaning steps to ensure that the legacy code in `mouse_connectivity_models` runs in newer versions of python; those steps are not outlined within the main steps below. For all steps between the steps outlined below, see `./run-all-before-manual-QC.sh` and `./run-all-after-manual-QC.sh`. 
+
 ### Setup 
 1. `download_knox_conn_data.sh` : Downloads all 3D volumes for injection_fraction, injection_density, and projection_density from the Allen API (For definitions of these quantities, see https://community.brain-map.org/t/api-allen-brain-connectivity/2988), to the directory specified at the top of the file. Uses `transform_space.py` (from Yohan Yee) to convert from Allen PIR --> RAS standard imaging coordinates (see manuscript for more info). Downloads WT tracer experiments that were included and excluded in the connectome from Knox et al. into respective subdirectories. Also downloads template/label files. 
 2. `multiply_threshold_inj_proj.sh inj_thresh proj_thresh`: multiplies injection fraction and injection density together (as was done in the code by Knox et al.). Then, uses separate the numerical thresholds (between 0 and 1) provided as command-line arguments to binarize the injection and projection files before generating QC images for PyQC.
