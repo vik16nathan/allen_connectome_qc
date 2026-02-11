@@ -49,12 +49,12 @@ annot, annot_info = mcc.get_annotation_volume()
 cache = VoxelModelCache(manifest_file='connectivity/voxel_model_manifest.json')
 
 _, source_mask, target_mask = cache.get_voxel_connectivity_array()
-source_mask_local=source_mask.coordinates
-target_mask_local=target_mask.coordinates
 
 nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
 weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
 voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
+
+##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask (these coordinates remain the same)
 
 ```
 
