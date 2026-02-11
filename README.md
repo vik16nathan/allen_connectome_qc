@@ -58,6 +58,7 @@ weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimit
 voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
 ##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask
+##ex: voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing coordinates in PIR space.
 
 ```
 
