@@ -50,11 +50,14 @@ cache = VoxelModelCache(manifest_file='connectivity/voxel_model_manifest.json')
 
 _, source_mask, target_mask = cache.get_voxel_connectivity_array()
 
+##source_mask and target_mask are based on the regions of interest used to build the connectome;
+##here, we access source indices based on all regions used in Knox et al., 2018
+
 nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
 weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
 voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
-##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask (these coordinates remain the same)
+##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask
 
 ```
 
