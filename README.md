@@ -105,7 +105,7 @@ voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
 
 ```
-VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask. For example, voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing voxel coordinates in the Allen Institute's PIR coordinate system.
+Then, voxel_array can be indexed like a matrix, with sources in source_mask and targets in target_mask. For example, voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing voxel coordinates in the Allen Institute's PIR coordinate system (for these coordinates, download the untransformed 100 um template from the Allen Institute via https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/average_template/average_template_100.nrrd). 
 
 Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html to work with the voxel-level connectome.
 
