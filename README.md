@@ -31,40 +31,6 @@ Within working directory:
 
 The normalized connection strengths between regions in the rebuilt regionalized voxel model and homogeneous model are also both stored within this repository. 
 
-## Loading Voxel-Level Connectomes
-Note: This was not in any of the analyses in Nathan et al., 2026; however, for anyone using the full voxel model from Knox et al., 2018, we recommend you use the rebuilt version (after `./run-all-after-manual-QC.sh`). 
-
-Within working directory, run the following code in Python, after installing AllenSDK:
-
-```
-from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
-from mcmodels.models.voxel import VoxelConnectivityArray
-from mcmodels.core import VoxelModelCache
-import numpy as np
-
-nodes_weights_dir="mouse_connectivity_models/paper/connectivity/voxel-standard-model/"
-mcc = MouseConnectivityCache(resolution=100) ###cannot change to anything but 100 
-annot, annot_info = mcc.get_annotation_volume()
-
-cache = VoxelModelCache(manifest_file='connectivity/voxel_model_manifest.json')
-
-_, source_mask, target_mask = cache.get_voxel_connectivity_array()
-
-##source_mask and target_mask are based on the regions of interest used to build the connectome;
-##here, we access source indices based on all regions used in Knox et al., 2018
-
-nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
-weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
-voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
-
-##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask
-##ex: voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing coordinates in PIR space.
-
-```
-
-Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html to work with the voxel-level connectome.
-
-
 ## Full Analysis
 
 Note that there are additional patching/cleaning steps to ensure that the legacy code in `mouse_connectivity_models` runs in newer versions of python; those steps are not outlined within the main steps below. For all steps between the steps outlined below, see `./run-all-before-manual-QC.sh` and `./run-all-after-manual-QC.sh`. 
@@ -107,4 +73,38 @@ Code for (10) and (11) provided by Lizette Herrera-Portillo from her recent manu
 15. `supp_fig_major_div_connectomes.R`: Makes Supplementary Figures 3, 5, 6, and 8 based on the choice of connectome/binarization threshold.
 16. `figure_4.R`: Makes figure plots visualizing the changes in the full regionalized voxel model (Figure 4) or homogeneous model (Supplementary Figure 4) based on the choice of Oh vs. Knox connectome. Also makes Supplementary Figure 7 at a 5% binarization threshold.
 17. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
+
+
+# Loading Voxel-Level Connectomes
+Note: This was not in any of the analyses in Nathan et al., 2026; however, for anyone using the full voxel model from Knox et al., 2018, we recommend you use the rebuilt version (after `./run-all-after-manual-QC.sh`). 
+
+Within working directory, run the following code in Python, after installing allensdk and mcmodels:
+
+```
+from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
+from mcmodels.models.voxel import VoxelConnectivityArray
+from mcmodels.core import VoxelModelCache
+import numpy as np
+
+nodes_weights_dir="mouse_connectivity_models/paper/connectivity/voxel-standard-model/"
+mcc = MouseConnectivityCache(resolution=100) ###cannot change to anything but 100 
+annot, annot_info = mcc.get_annotation_volume()
+
+cache = VoxelModelCache(manifest_file='connectivity/voxel_model_manifest.json')
+
+_, source_mask, target_mask = cache.get_voxel_connectivity_array()
+
+##source_mask and target_mask are based on the regions of interest used to build the connectome;
+##here, we access source indices based on all regions used in Knox et al., 2018
+
+nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
+weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
+voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
+
+##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask
+##ex: voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing coordinates in PIR space.
+
+```
+
+Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html to work with the voxel-level connectome.
 
