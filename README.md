@@ -99,12 +99,13 @@ _, source_mask, target_mask = cache.get_voxel_connectivity_array()
 
 nodes_rebuilt = np.loadtxt(nodes_weights_dir+'nodes_rebuilt.csv.gz', delimiter=',')
 weights_rebuilt = np.loadtxt(nodes_weights_dir+'weights_rebuilt.csv.gz', delimiter=',')
+
+##voxel_array is nodes x weights, where nodes is an n_sources x n_regions matrix, and weights is an n_regions x n_targets matrix.
 voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
-##VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask
-##ex: voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing coordinates in PIR space.
 
 ```
+VoxelConnectivityArray can be indexed like a matrix, with sources in source_mask and targets in target_mask. For example, voxel_array[i,j] represents the connectivity between voxels at coordinates source_mask[i] and target_mask[j], where source_mask[i] and target_mask[j] are 3D integers representing voxel coordinates in the Allen Institute's PIR coordinate system.
 
 Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html to work with the voxel-level connectome.
 
