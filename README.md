@@ -39,8 +39,10 @@ Within working directory, run the following code in Python, after installing All
 ```
 from allensdk.core.mouse_connectivity_cache import MouseConnectivityCache
 from mcmodels.models.voxel import VoxelConnectivityArray
+from mcmodels.core import VoxelModelCache
 import numpy as np
 
+nodes_weights_dir="mouse_connectivity_models/paper/connectivity/voxel-standard-model/"
 mcc = MouseConnectivityCache(resolution=100) ###cannot change to anything but 100 
 annot, annot_info = mcc.get_annotation_volume()
 
@@ -56,7 +58,7 @@ voxel_array = VoxelConnectivityArray(nodes_rebuilt, weights_rebuilt)
 
 ```
 
-Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html.
+Then, follow all instructions in https://mouse-connectivity-models.readthedocs.io/en/latest/modules/generated/mcmodels.models.voxel.VoxelConnectivityArray.html to work with the voxel-level connectome.
 
 
 ## Full Analysis
