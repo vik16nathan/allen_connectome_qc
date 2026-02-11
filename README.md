@@ -75,7 +75,7 @@ Code for (10) and (11) provided by Lizette Herrera-Portillo from her recent manu
 17. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
 
 
-# Loading Voxel-Level Connectomes
+### Loading Voxel-Level Connectomes
 Note: This was not in any of the analyses in Nathan et al., 2026; however, for anyone using the full voxel model from Knox et al., 2018, we recommend you use the rebuilt version (after `./run-all-after-manual-QC.sh`). 
 
 Within working directory, run the following code in Python, after installing allensdk and mcmodels:
