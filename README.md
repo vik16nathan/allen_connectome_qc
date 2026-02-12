@@ -13,7 +13,7 @@ All analyses were run on a Linux OS with the following packages/scripts download
 * python packages: see virtual environment file; install packages using `uv` package manager
 * `make_slices_images.sh` (https://github.com/CoBrALab/make_slice_images) and PyQC for manual QC images (https://github.com/CoBrALab/PyQC)
 * `matlab R2024_5b` to run graph theoretical analyses in Brain Connectivity Toolbox
-* Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - download within working directory
+* Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - version 2019-03-03. download within working directory
 * `rstudio` version 2022.02.3+492: for visualizations
     * `install.packages("pacman")` to allow further package management/package downloads in subsequent R scripts
 * `ggslicer` for visualizations, within working directory (courtesy of Yohan Yee https://github.com/yohanyee/ggslicer) 
