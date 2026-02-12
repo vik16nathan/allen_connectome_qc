@@ -62,7 +62,7 @@ for csv_file in "${!file_to_outdir[@]}"; do
     
     for tracer in "${csv_data[@]}"; do
         # Skip tracer 310207648 (missing data)
-        if [[ "$tracer" == "310207648" ]]; then
+        if [[ "$tracer" -eq 310207648 ]]; then
             echo "  Skipping tracer $tracer (missing data)"
             continue
         fi

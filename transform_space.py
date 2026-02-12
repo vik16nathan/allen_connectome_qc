@@ -229,6 +229,7 @@ try:
     # Types
     vtype = vol.volumeType if args.volume_type is None else args.volume_type
     dtype = vol.dtype if args.data_type is None else args.data_type
+    # Use volume's label setting unless user explicitly requested label treatment
     labels = vol.labels if not args.labels else True
 
     # %% Data output

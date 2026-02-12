@@ -80,8 +80,9 @@ if __name__ == '__main__':
         means = []
         stds = []
         
-        # Fixed: range should be communities.shape[1], not +1
-        for col in range(2, communities.shape[1]):
+        # Process columns starting from 2 (skip 0 and 1)
+        # Range goes to shape[1]+1 to include the last column
+        for col in range(2, communities.shape[1] + 1):
             print(f'Processing column {col}')
             r = []
             
