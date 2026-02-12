@@ -229,8 +229,8 @@ try:
     # Types
     vtype = vol.volumeType if args.volume_type is None else args.volume_type
     dtype = vol.dtype if args.data_type is None else args.data_type
-    # If user explicitly set --labels flag, use True; otherwise use volume's setting
-    labels = args.labels if args.labels else vol.labels
+    # Use True if user provided --labels flag, otherwise use volume's default setting
+    labels = True if args.labels else vol.labels
 
     # %% Data output
 
