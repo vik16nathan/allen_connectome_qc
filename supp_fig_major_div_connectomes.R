@@ -14,6 +14,28 @@ args <- commandArgs(trailingOnly=TRUE)
 knox_or_oh <- args[1]
 binary_pct_threshold <- as.numeric(args[2])
 
+###load major division colors
+# install.packages("ggtext") # if needed
+library(ggtext)
+
+##palette##
+iwant_hex <- c("#a83537","#4fc79c","#63348a","#73c161","#6280d6","#d3a046",
+               "#ca78cd","#4c792a","#bb467a","#aab248","#a96126","#ff846b")
+
+# --- Build color map for major_division ---
+# If you also have fmd/fmd_col, you can include them in the union as you showed.
+# If not, we just use the levels present in tracer_joined:
+# --- Fixed legend/order from major_division_dict ---
+# Preserve the column order exactly as written in your dict
+major_division_dict <- data.frame(Isocortex=315, OLF=698, HPF=1089, CTXsp=703, STR=477, PAL=803,
+                                  Thal=549, Hypothal=1097, Midbrain=313, Pons=771,
+                                  Medulla=354, CB=512)
+
+div_lvls <- colnames(major_division_dict)
+
+# Map colors to levels in dict order
+div_cols <- setNames(iwant_hex[seq_along(div_lvls)], div_lvls)
+
 ###organize region numbers --> names --> major subdivisions
 #load the dictionary from label numbers <-- --> region acronyms
 aba_region_filepath <- paste0(allen_input_dir, "allen_ccfv3_tree_wang_2020_s2.xlsx")
@@ -65,16 +87,10 @@ knox_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi("mouse_connectivi
 knox_conn_contra_new <- knox_conn_contra_ipsi[[1]]
 knox_conn_ipsi_new <- knox_conn_contra_ipsi[[2]]
 
-write.csv(knox_conn_contra_old, "../derivatives/regionalized_connectomes/knox_conn_contra_old.csv", row.names=TRUE)
-write.csv(knox_conn_ipsi_old, "../derivatives/regionalized_connectomes/knox_conn_ipsi_old.csv", row.names=TRUE)
-
-write.csv(knox_conn_contra_new, "../derivatives/regionalized_connectomes/knox_conn_contra_new.csv", row.names=TRUE)
-write.csv(knox_conn_ipsi_new, "../derivatives/regionalized_connectomes/knox_conn_ipsi_new.csv", row.names=TRUE)
-
 ###repeat for Oh connectomes#############################
 ####load parcellated Oh connectomes (old vs. rerun)
 ##NOTE: changed directories to rerun w/ 211 regions for OHBM abstract (more similar to original 213 regions)
-##not the same as taking the 291 mesoscale regions --> looking at original OH regions (only 203 regions kept)
+##not the same as taking the 291 mesoscale regions --> looking at original OH regions
 connectome_dir <- "mouse_connectivity_models/paper/figures/model_comparison/output/"
 oh_conn_old <- as.data.frame(read_csv(paste0(connectome_dir,"homogeneous-standard-model_original.csv")))
 oh_conn_region_numbers <- oh_conn_old[2:nrow(oh_conn_old),1]
@@ -86,12 +102,6 @@ oh_conn_ipsi_old <- oh_conn_contra_ipsi[[2]]
 oh_conn_contra_ipsi <- process_regionalized_conn_contra_ipsi(paste0(connectome_dir,"homogeneous-standard-model_rebuilt.csv"))
 oh_conn_contra_new <- oh_conn_contra_ipsi[[1]] 
 oh_conn_ipsi_new <- oh_conn_contra_ipsi[[2]]
-
-write.csv(oh_conn_contra_old, "../derivatives/regionalized_connectomes//oh_conn_contra_old_211.csv", row.names=TRUE)
-write.csv(oh_conn_ipsi_old, "../derivatives/regionalized_connectomes/oh_conn_ipsi_old_211.csv", row.names=TRUE)
-
-write.csv(oh_conn_contra_new, "../derivatives/regionalized_connectomes/oh_conn_contra_new_211.csv", row.names=TRUE)
-write.csv(oh_conn_ipsi_new, "../derivatives/regionalized_connectomes/oh_conn_ipsi_new_211.csv", row.names=TRUE)
 
 #################TOGGLE BETWEEN KNOX/OH CONNECTOMES HERE#######################
 ##original: don't exclude any of the regions
@@ -393,7 +403,15 @@ make_diff_major_div_heatmap <- function(diff_no_outliers, md, md_col) {
       low = "cyan", mid = "white", high = "red", midpoint = 0,
       name = "Mean Difference in Percentile"
     ) +
-    scale_y_discrete(limits = rev(levels(df_heat$RowDiv))) +  # reverse y-axis order
+    scale_y_discrete(
+      limits = rev(levels(df_heat$RowDiv)),
+      labels = function(x)
+        paste0("<span style='color:", div_cols[x], "'>", x, "</span>")
+    ) +
+    scale_x_discrete(
+      labels = function(x)
+        paste0("<span style='color:", div_cols[x], "'>", x, "</span>")
+    ) +
     coord_fixed() +
     labs(
       title = "Mean Percentile Difference by Major Division",
@@ -402,12 +420,13 @@ make_diff_major_div_heatmap <- function(diff_no_outliers, md, md_col) {
     ) +
     theme_minimal(base_size = 30) +
     theme(
-      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-      axis.text.y = element_text(hjust = 1),
+      axis.text.x = element_markdown(angle = 45, hjust = 1, vjust = 1),
+      axis.text.y = element_markdown(hjust = 1),
       axis.title.x = element_text(margin = margin(t = 15)),
       axis.title.y = element_text(margin = margin(r = 15)),
       plot.title = element_text(hjust = 0.5)
     )
+
   
   return(p)
 }
@@ -619,37 +638,54 @@ make_condensed_major_div_heatmap <- function(mat_old, mat_new, mat_diff, md, md_
   # Mark rows with total_count == 0 -> give them a light grey background tile and no colored triangles
   empty_cells <- df %>% filter(total_count == 0) %>% mutate(x = x, y = y)
   
-  # --- Plot ---
+    # --- Plot ---
   p <- ggplot() +
-    # optional grid/background squares so empty cells are visible
     geom_tile(data = df, aes(x = x, y = y), width = 0.98, height = 0.98,
               fill = "white", color = "grey90") +
-    # grey overlay for empty cells (total_count == 0)
     geom_tile(data = empty_cells, aes(x = x, y = y), width = 0.98, height = 0.98,
               fill = "grey97", color = "grey85") +
-    # draw triangles (polygons); fill is taken from the precomputed hex color.
-    # We use NA fill for NA entries (i.e., when total==0)
     geom_polygon(data = poly_df %>% filter(type == "loss"),
-                 aes(x = x, y = y, group = interaction(major_row, major_col, type)),
-                 fill = poly_df$fill[poly_df$type == "loss"], color = NA) +
+                aes(x = x, y = y, group = interaction(major_row, major_col, type)),
+                fill = poly_df$fill[poly_df$type == "loss"], color = NA) +
     geom_polygon(data = poly_df %>% filter(type == "gain"),
-                 aes(x = x, y = y, group = interaction(major_row, major_col, type)),
-                 fill = poly_df$fill[poly_df$type == "gain"], color = NA) +
-    # optional percent labels — place loss % near upper-left, gain % near lower-right
-    geom_text(data = df, aes(x = x - 0.18, y = y + 0.12, label = ifelse(is.na(loss_pct), "", sprintf("%.0f%%", loss_pct))),
-              size = 5, color = "black") +
-    geom_text(data = df, aes(x = x + 0.18, y = y - 0.12, label = ifelse(is.na(gain_pct), "", sprintf("%.0f%%", gain_pct))),
-              size = 5, color = "black") +
-    # axes: show major-division names
-    scale_x_continuous(breaks = seq_along(col_names), labels = col_names, expand = c(0,0)) +
-    scale_y_reverse(breaks = seq_along(row_names), labels = row_names, expand = c(0,0)) +
+                aes(x = x, y = y, group = interaction(major_row, major_col, type)),
+                fill = poly_df$fill[poly_df$type == "gain"], color = NA) +
+    geom_text(data = df,
+              aes(x = x - 0.18, y = y + 0.12,
+                  label = ifelse(is.na(loss_pct), "", sprintf("%.0f%%", loss_pct))),
+              size = 5) +
+    geom_text(data = df,
+              aes(x = x + 0.18, y = y - 0.12,
+                  label = ifelse(is.na(gain_pct), "", sprintf("%.0f%%", gain_pct))),
+              size = 5) +
+    scale_x_continuous(
+      breaks = seq_along(col_names),
+      labels = function(x) {
+        labs <- col_names[x]
+        paste0("<span style='color:", div_cols[labs], "'>", labs, "</span>")
+      },
+      expand = c(0,0)
+    ) +
+    scale_y_reverse(
+      breaks = seq_along(row_names),
+      labels = function(y) {
+        labs <- row_names[y]
+        paste0("<span style='color:", div_cols[labs], "'>", labs, "</span>")
+      },
+      expand = c(0,0)
+    ) +
     coord_fixed() +
-    labs(x = "Target division", y = "Source division (right hemisphere)",
-         title = "Percent of Connections Gained and Lost after Rebuilding") +
+    labs(
+      x = "Target division",
+      y = "Source division (right hemisphere)",
+      title = "Percent of Connections Gained and Lost after Rebuilding"
+    ) +
     theme_minimal(base_size = 24) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1),
-          panel.grid = element_blank())
-  
+    theme(
+      axis.text.x = element_markdown(angle = 45, hjust = 1),
+      axis.text.y = element_markdown(),
+      panel.grid = element_blank()
+    )
   return(p)
 }
 

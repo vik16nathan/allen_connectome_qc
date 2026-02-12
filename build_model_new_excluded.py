@@ -107,6 +107,11 @@ def main():
     # regionalized
     logging.debug('regionalizing voxel weights')
     ontological_order = get_ordered_summary_structures(cache)
+
+    outfile_suffix = sys.argv[2]
+    if outfile_suffix == "original_oh_211_regions" or outfile_suffix == "rebuilt_oh_211_regions":
+        ontological_order = np.loadtxt("../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt")
+    
     source_mask = Mask.from_cache(cache, structure_ids=structure_ids, hemisphere_id=2)
     source_key = source_mask.get_key(structure_ids=ontological_order)
     ipsi_key = data.projection_mask.get_key(structure_ids=ontological_order, hemisphere_id=2)

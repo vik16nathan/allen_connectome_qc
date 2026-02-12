@@ -180,7 +180,7 @@ left_counts <- alluv_df %>%
     bottom = lag(cumsum(n), default = 0),
     top    = bottom + n,
     center = (bottom + top) / 2,
-    gap = max(n) * 0.1,
+    gap = max(n) * 0.15,
     label_y = center - gap
   )
 
@@ -196,7 +196,7 @@ right_counts <- alluv_df %>%
     bottom = lag(cumsum(n), default = 0),
     top    = bottom + n,
     center = (bottom + top) / 2,
-    gap = max(n) * 0.1,
+    gap = max(n) * 0.15,
     label_y = center - gap
   ) %>%
   filter(n > 3)   # same filtering rule as left_counts
@@ -270,7 +270,7 @@ p <- ggplot(alluv_df,
   scale_fill_manual(values = div_cols, na.value = "grey50") +
 
   labs(
-    y = "Number of tracers",
+    y = "Num. tracers",
     x = NULL,
     title = "Sankey (alluvial) of tracers removed by first QC criterion, grouped by major division"
   ) +
@@ -351,11 +351,11 @@ ylab_map <- setNames(tracer_label_colors$lbl, tracer_label_colors$Tracer)
 
 # Now plotting should respect tracer_levels_ordered because Tracer is a factor with those levels
 p <- ggplot(df_long, aes(x = Metric, y = Tracer, fill = type)) +
-  geom_tile(color = "white") +
+  geom_tile(color="black") +
   scale_fill_manual(
     name = NULL,
     values = c(
-      zero        = "white",
+      zero        = "transparent",
       auto        = "steelblue",
       manual      = "green",
       manual_only = "yellow"
@@ -366,7 +366,7 @@ p <- ggplot(df_long, aes(x = Metric, y = Tracer, fill = type)) +
   scale_y_discrete(labels = ylab_map, limits = rev(levels(df_long$Tracer))) +
   labs(x = NULL, y = "Tracer (colored by major division)",
        title = "Overall Tracers to Remove from Connectome") +
-  theme_minimal(base_size = 20) +
+  theme_light(base_size = 20) +
   theme(
     plot.title = element_text(hjust=0.5),
     axis.text.x = element_text(angle = 45, hjust = 1),
@@ -442,7 +442,7 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
   scale_fill_manual(
     values = c("1" = "yellow", "2" = "orange", "3" = "red"),
     breaks = c("1", "2", "3"),
-    name = "Number of tracers removed",
+    name = "Num. tracers removed",
     drop = FALSE
   ) + 
   scale_x_continuous(expand = c(0, 0)) +
@@ -606,4 +606,3 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
     title = "Proportion of Experiments With Projection Voxels > 0.1 Excluded After QC", # Add title
   )
 ggsave("figures/figure_3b_proj_voxel_ratio.png", p, width=24, height=16, dpi=300)
-
