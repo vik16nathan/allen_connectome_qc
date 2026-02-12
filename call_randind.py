@@ -81,7 +81,8 @@ if __name__ == '__main__':
         stds = []
         
         # Process columns starting from 2 (skip 0 and 1)
-        # Note: range goes to shape[1] (not +1) because subset indices access rows
+        # Note: communities array is indexed as communities[row], where each row
+        # is a community assignment across all nodes
         for col in range(2, communities.shape[1]):
             print(f'Processing column {col}')
             r = []

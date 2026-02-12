@@ -51,7 +51,7 @@ if [[ ! -f "BCT.zip" ]]; then
     # Check if gdown is available
     if ! command -v gdown &> /dev/null; then
         echo "Installing gdown..."
-        pip install gdown
+        uv pip install gdown
     fi
     
     # Download and extract
