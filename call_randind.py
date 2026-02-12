@@ -80,8 +80,7 @@ if __name__ == '__main__':
         means = []
         stds = []
         
-        # Process from index 2 onwards (skip indices 0 and 1)
-        # Iterates over second dimension of communities array
+        # Process second dimension indices starting from 2 (skip 0 and 1)
         for i in range(2, communities.shape[1]):
             print(f'Processing index {i}')
             r = []
