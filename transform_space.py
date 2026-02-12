@@ -47,10 +47,27 @@ def remove_temp_files(file_list):
         file_list: List of temporary file objects to remove
     """
     for f in file_list:
-        if os.path.exists(f.name):
-            f.close()
+        # Safely obtain the filename associated with this temporary file object.
+        filename = getattr(f, "name", None)
+        if not filename:
+            # Nothing to clean up if there is no filename.
+            continue
 
+        # Ensure the file handle is closed, ignoring errors if already closed.
+        try:
+            if not getattr(f, "closed", False):
+                f.close()
+        except Exception:
+            # Best-effort cleanup; continue to attempt unlinking the path.
+            pass
 
+        # Explicitly remove the temporary file from disk if it still exists.
+        try:
+            if os.path.exists(filename):
+                os.remove(filename)
+        except FileNotFoundError:
+            # File was already removed; nothing more to do.
+            pass
 def reorient_to_standard(dat):
     """Reorient data from PIR to RAS orientation.
     
