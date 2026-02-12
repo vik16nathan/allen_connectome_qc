@@ -103,7 +103,7 @@ parser.add_argument('--volume_type', default=None, type=str,
                     help='Volume type (default: from input file)')
 parser.add_argument('--data_type', default=None, type=str,
                     help='Data type (default: from input file)')
-parser.add_argument('--labels', default=None, action='store_true',
+parser.add_argument('--labels', action='store_true',
                     help='Treat as label volume')
 parser.add_argument('--clobber', default=False, action='store_true',
                     help='Overwrite existing output file')
@@ -230,7 +230,7 @@ try:
     vtype = vol.volumeType if args.volume_type is None else args.volume_type
     dtype = vol.dtype if args.data_type is None else args.data_type
     # If user explicitly set --labels flag, use True; otherwise use volume's setting
-    labels = vol.labels if args.labels is None else args.labels
+    labels = args.labels if args.labels else vol.labels
 
     # %% Data output
 

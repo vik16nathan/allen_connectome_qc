@@ -80,14 +80,16 @@ if __name__ == '__main__':
         means = []
         stds = []
         
-        # Process columns starting from 2 (skip 0 and 1)
-        # Note: communities array is indexed as communities[row], where each row
-        # is a community assignment across all nodes
-        for col in range(2, communities.shape[1]):
-            print(f'Processing column {col}')
+        # Process iterations starting from 2 (skip 0 and 1)
+        # Note: communities array shape is (n_iterations, n_gamma_values)
+        # We iterate through iterations and compute pairwise MI between them
+        for iteration in range(2, communities.shape[1]):
+            print(f'Processing iteration {iteration}')
             r = []
             
-            for subset in itertools.combinations(range(col), 2):
+            # Compare all pairs of previous iterations
+            for subset in itertools.combinations(range(iteration), 2):
+                # communities[i] accesses i-th row (iteration)
                 r.append(call_rand(communities[subset[0]], communities[subset[1]]))
             
             means.append(np.average(r))
