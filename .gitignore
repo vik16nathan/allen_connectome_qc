@@ -1,0 +1,7 @@
+*pdf
+2019_03_03_BCT/
+mouse_connectivity_models/
+__pycache__/
+PyQC/
+logs/
+*.csv
