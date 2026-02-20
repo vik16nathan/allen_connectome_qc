@@ -101,7 +101,7 @@ for percentile_threshold=[80]  % keep top 20% of connections
         rand_input_mat_path=[output_dir,'rand_input_',suffix,'.mat'];
         save(rand_input_mat_path,'ciu');
         %run this in a separate shell
-        system(['python3 call_randind.py --matfile ', rand_input_mat_path, ' --flag 1 --suffix ', suffix]);
+        system(['python call_randind.py --matfile ', rand_input_mat_path, ' --flag 1 --suffix ', suffix]);
         %%
         x=load(['../derivatives/community_louvain/rand_output_',suffix,'.mat']);
         %%
