@@ -6,22 +6,27 @@ This is the code to reproduce all results in *Experimental Quality Control Induc
 
 ## Dependencies
 
+See `set-up-environment-dnp.sh`.
+
 All analyses were run on a Linux OS with the following packages/scripts downloaded:
 * `minc-toolkit-v2`
+* `ANTs`
 * `python 3.9` (to run legacy software in mouse_connectivity_models)
 * `mouse_connectivity_models`: https://github.com/AllenInstitute/mouse_connectivity_models -  follow download instructions to install within working directory  
 * python packages: see virtual environment file; install packages using `uv` package manager
 * `make_slices_images.sh` (https://github.com/CoBrALab/make_slice_images) and PyQC for manual QC images (https://github.com/CoBrALab/PyQC)
 * Brain Connectivity Toolbox: https://sites.google.com/site/bctnet/ - download within working directory
 * `rstudio` version 2022.02.3+492: for visualizations
+* `RMINC`
 * `ggslicer` for mouse brain visualizations (see https://github.com/yohanyee/ggslicer)
 
 
 ## Quickstart to Reproduce Results
 Note that there are two stages: before manual QC (downloading/thresholding/automated QC/making manual QC images) and after manual QC (rebuilding connectomes/visualizing changes/graph theory analyses). To reproduce our results, you can use our manual QC ratings provided within a subdirectory (stored as a .csv file). 
 
-1. `./run-all-before-manual-QC.sh`
-2. `./run-all-after-manual-QC.sh`
+1. `./set-up-environment-dnp.sh`: sets up environment using modules on Douglas Neuroinformatics Platform; note that you may need to tailor this to your local machine.
+2.  `./run-all-before-manual-QC.sh`
+3. `./run-all-after-manual-QC.sh`
 
 ## Full Analysis
 
