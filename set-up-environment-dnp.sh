@@ -3,6 +3,7 @@ module load anaconda R
 module load minc-toolkit-v2
 module load RMINC
 module load MATLAB
+module load ANTs
 
 #########DOWNLOAD PyQC BEFORE MANUAL QC###################
 git clone https://github.com/CoBrALab/PyQC

@@ -1,6 +1,4 @@
 #!/bin/bash
-module load minc-toolkit-v2
-
 
 #######STEP 1: Download Template and Label Files############################
 allen_template_dir="../preprocessed/allen_template_inputs/"

@@ -1,6 +1,4 @@
 #!/bin/bash
-module load minc-toolkit-v2
-module load ANTs
 # Define file paths
 ###NOTE: can change threshold as needed
 inj_thresh=$1
