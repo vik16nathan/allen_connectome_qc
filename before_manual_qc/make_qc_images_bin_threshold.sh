@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+cd ..
 # Define file paths
 ###NOTE: can change threshold as needed
 if [[ $# -lt 2 ]]; then

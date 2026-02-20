@@ -4,16 +4,17 @@ set -euo pipefail
 ##################################################################################################
 
 #### NOTE: All scripts here run with injection thresholds of 0.5 and projection thresholds of 0.1###
+cd after_manual_qc
 Rscript compare_manual_qc_both_raters.R
 Rscript overall_qc_exclusion.R
 
 ###very slight modifications needed to mouse_connectivity_models to get things running (legacy python)
 ###single change to line 5 of scorers.py
-cp scorers_updated.py ./mouse_connectivity_models/paper/figures/model_comparison/helpers/scorers.py
+cp scorers_updated.py ../mouse_connectivity_models/paper/figures/model_comparison/helpers/scorers.py
 ./patch_api_timeout.sh ###increase time limits for file loads to allow download of all conn. files
 
-oh_rgn_list="../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt"
-knox_region_list="../preprocessed/allen_template_inputs/knox_connectome_rgn_numbers_ccfv3.txt"
+oh_rgn_list="../../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt"
+knox_region_list="../../preprocessed/allen_template_inputs/knox_connectome_rgn_numbers_ccfv3.txt"
 
 ###rebuild connectomes with the original list of experiments to exclude from Knox et al., 2018
 source .venv/bin/activate
@@ -31,26 +32,31 @@ source .venv/bin/activate
 
 #################################################
 #############graph theory analyses###############
+cd ..
 mkdir -p ../derivatives/regionalized_connectomes/
+mkdir -p ../derivatives/rich_club/
+mkdir -p ../derivatives/community_louvain/
+
+cd graph_theory
 Rscript process_flip_regionalized_connectomes.R
 
-mkdir -p ../derivatives/rich_club/
 matlab -batch "dbstop if error; rich_club_connectome_bin"
 
-mkdir -p ../derivatives/community_louvain/
 matlab -batch "dbstop if error; community_connectome_bin"
 
 ###########visualizations##########################
+cd ..
 mkdir -p figures
 mkdir -p figures/oh/
+mkdir -p "../derivatives/excluded_tracer_aggregate_volumes/"
 
+
+cd visualizations/
 ###misc - manually fill in experiments in query.csv with missing injection regions (available on website)
 Rscript fill_in_missing_knox_tracer_regions.R
 
 Rscript figure_1_workflow.R
 Rscript figure_2.R
-
-mkdir -p "../derivatives/excluded_tracer_aggregate_volumes/"
 Rscript figure_3.R
 
 ##visualize each combination of thresholds and connectome models

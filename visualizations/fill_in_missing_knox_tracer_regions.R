@@ -2,7 +2,7 @@ library("dplyr")
 library("readr")
 library("readxl")
 
-setwd(".")
+setwd("..")
 allen_input_dir <- "../preprocessed/allen_template_inputs/"
 knox_experiments_included <- as.data.frame(read.csv("./knox_experiment_csvs/knox_experiments_included.csv"))
 allen_api_exps <- as.data.frame(read.csv("./knox_experiment_csvs/wt_experiments_allen_api_not_knox.csv"))

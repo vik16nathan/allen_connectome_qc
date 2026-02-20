@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+cd ..
 output_dir="../preprocessed/allen_template_inputs/"
 
 cd "${output_dir}"

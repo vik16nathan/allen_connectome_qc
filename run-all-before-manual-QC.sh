@@ -1,10 +1,10 @@
 #!/bin/bash
 set -euo pipefail
-
+cd before_manual_qc
 ##download and binarize inj/proj data @ diff thresholds
 ###all command-line arguments are in the order inj_thresh proj_thresh
 ./download_knox_conn_data.sh
-mv ./allen_template_inputs ../preprocessed/
+mv ../allen_template_inputs ../../preprocessed/
 
 ##optional: to see how the label/mask files were downloaded and transformed
 ./download_process_allen_template_inputs.sh

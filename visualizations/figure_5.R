@@ -1,4 +1,4 @@
-setwd(".")
+setwd("..")
 library("pacman")
 library("RMINC")
 pacman::p_load(tidyverse, pheatmap, dplyr, readr, readxl, patchwork, R.matlab, ggrepel)

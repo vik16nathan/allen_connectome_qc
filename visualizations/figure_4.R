@@ -1,6 +1,6 @@
 library("pacman")
 pacman::p_load(tidyverse, pheatmap, dplyr, readr, readxl, patchwork, ggrepel, RColorBrewer)
-setwd(".")
+setwd("..")
 
 ###LOAD VISUALIZATION SCRIPTS, ARGUMENTS; SET PATHS AND INPUTS#############
 source("./ggslicer/plotting_functions/plotting_functions.R")

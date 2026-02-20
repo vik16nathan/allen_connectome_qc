@@ -1,14 +1,14 @@
 %% add path for Brain Connectivity Toolbox
-addpath('2019_03_03_BCT/');
+addpath('../2019_03_03_BCT/');
 % Ensure MATLAB starts in the script folder
 cd(fileparts(mfilename('fullpath')))
-output_dir='../derivatives/rich_club/';
+output_dir='../../derivatives/rich_club/';
 
 %%
-knox_rgn_conn_matrices={'../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
+knox_rgn_conn_matrices={'../../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
 
 knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_density'};
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+cd ..
 #######STEP 1: Download Template and Label Files############################
 allen_template_dir="../preprocessed/allen_template_inputs/"
 mkdir -p "${allen_template_dir}"

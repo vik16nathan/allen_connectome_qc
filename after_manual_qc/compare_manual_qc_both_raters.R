@@ -1,7 +1,7 @@
 library("dplyr")
 library("readr")
 library("tidyr")
-
+setwd("..")
 ##load Steph's qc csv
 steph_qc_csv <- as.data.frame(read_delim("./rater2/vikram-qc-full.csv", delim="/"))
 steph_qc_csv <- steph_qc_csv[,c(1,2,4,5)]

@@ -6,14 +6,14 @@ cd(fileparts(mfilename('fullpath')))
 
 %%set random seed for reproducibility
 rng(123);
-addpath("2019_03_03_BCT/");
-output_dir='../derivatives/community_louvain/';
-rich_club_dir='../derivatives/rich_club/';
+addpath("../2019_03_03_BCT/");
+output_dir='../../derivatives/community_louvain/';
+rich_club_dir='../../derivatives/rich_club/';
 %%
-knox_rgn_conn_matrices={'../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
-    '../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
+knox_rgn_conn_matrices={'../../derivatives/regionalized_connectomes/knox_conn_strength_old_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_strength_new_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_density_old_bilateral.csv',...
+    '../../derivatives/regionalized_connectomes/knox_conn_density_new_bilateral.csv'};
 
 knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_density'};
 %Repeat analysis for old vs. new connectomes
@@ -103,7 +103,7 @@ for percentile_threshold=[80]  % keep top 20% of connections
         %run this in a separate shell
         system(['python call_randind.py --matfile ', rand_input_mat_path, ' --flag 1 --suffix ', suffix]);
         %%
-        x=load(['../derivatives/community_louvain/rand_output_',suffix,'.mat']);
+        x=load(['../../derivatives/community_louvain/rand_output_',suffix,'.mat']);
         %%
         ami_thr=0.9:0.005:1;
         ami_matrix=x.a;

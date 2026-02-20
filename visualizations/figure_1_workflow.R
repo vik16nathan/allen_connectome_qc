@@ -4,7 +4,7 @@
 library("pacman")
 library("RMINC")
 pacman::p_load(dplyr, readr, readxl, stringr, foreach, doParallel, ggplot2, ggrepel, tidyr)
-setwd(".")
+setwd("..")
 source("./ggslicer/plotting_functions/plotting_functions.R")
 source("./ggslicer/plotting_functions/plotting_functions_labels.R")
 

@@ -1,6 +1,6 @@
 library("pacman")
 pacman::p_load(tidyverse, dplyr, readr, readxl, patchwork)
-setwd(".")
+setwd("..")
 allen_input_dir <- "../preprocessed/allen_template_inputs/"
 
 process_regionalized_conn_contra_ipsi <- function(regionalized_conn_strength_path) {

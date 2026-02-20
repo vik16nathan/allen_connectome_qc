@@ -6,7 +6,7 @@ if [[ $# -lt 2 ]]; then
     exit 1
 fi
 
-source .venv/bin/activate
+source ../.venv/bin/activate
 excluded_exps_file=$1
 suffix=$2
 python build_model_new_excluded.py "${excluded_exps_file}" "${suffix}"

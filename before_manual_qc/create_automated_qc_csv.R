@@ -1,7 +1,7 @@
 #install.packages("pacman")
 library("pacman")
 pacman::p_load(dplyr, readr, readxl, stringr, foreach, doParallel, RMINC)
-setwd(".")
+setwd("..")
 
 ####CHANGE THESE IF NEEDED####
 ###set thresholds for the entire script - can change later as needed##

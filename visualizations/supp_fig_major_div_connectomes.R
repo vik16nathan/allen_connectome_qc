@@ -3,7 +3,7 @@ pacman::p_load(tidyverse, pheatmap, dplyr, readr, readxl, patchwork, ggrepel, sc
 
 
 ###SET DIRECTORY PATHS AND HYPERPARAMETERS
-setwd(".")
+setwd("..")
 allen_input_dir <- "../preprocessed/allen_template_inputs/"
 source("./ggslicer/plotting_functions/plotting_functions.R")
 source("./ggslicer/plotting_functions/plotting_functions_labels.R")

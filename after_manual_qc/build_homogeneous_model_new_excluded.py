@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import sys
 import pandas as pd
-sys.path.insert(0,"./mouse_connectivity_models/paper/figures/model_comparison/")
+sys.path.insert(0,"../mouse_connectivity_models/paper/figures/model_comparison/")
 import allensdk.core.json_utilities as ju
 
 from mcmodels.core import VoxelModelCache
@@ -18,12 +18,12 @@ from model_data_updated import ModelData
 from helpers.utils import get_structure_id, get_ordered_summary_structures
 
 
-exp_input_dir='./mouse_connectivity_models/paper/'
+exp_input_dir='../mouse_connectivity_models/paper/'
 INPUT_JSON = os.path.join(exp_input_dir, 'input.json')
 TOP_DIR=exp_input_dir
 ROOT_ID = 997
 HIGH_RES = False
-OUTPUT_DIR='./mouse_connectivity_models/paper/figures/model_comparison/output/'
+OUTPUT_DIR='../mouse_connectivity_models/paper/figures/model_comparison/output/'
 THRESHOLD_INJECTION = True
 
 def get_summary_structure_ids(rgn_list_path): ###change this to be consistent with Oh et al., 2014
@@ -80,7 +80,7 @@ def main():
     # experiments to exclude
     ###CHANGED FROM ORIGINAL LIST TO ACCOUNT FOR QC FAILURE MODES
     exp_exc_path=sys.argv[1]
-    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", exp_exc_path)
+    EXPERIMENTS_EXCLUDE_JSON = os.path.join("../mouse_connectivity_models/paper/", exp_exc_path)
     experiments_exclude = ju.read(EXPERIMENTS_EXCLUDE_JSON)
 
     # load hyperparameter dict

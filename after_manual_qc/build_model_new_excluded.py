@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import pandas as pd
 import sys
-sys.path.insert(0,"./mouse_connectivity_models/paper/figures/model_comparison/")
+sys.path.insert(0,"../mouse_connectivity_models/paper/figures/model_comparison/")
 
 import allensdk.core.json_utilities as ju
 
@@ -19,9 +19,9 @@ from helpers.error import VoxelModelError
 from helpers.utils import get_structure_id, get_ordered_summary_structures
 
 ########CHANGED PATH DEFINITIONS#####################
-exp_input_dir='./mouse_connectivity_models/paper/'
+exp_input_dir='../mouse_connectivity_models/paper/'
 INPUT_JSON = os.path.join(exp_input_dir, 'input.json')
-OUTPUT_DIR='./mouse_connectivity_models/paper/figures/model_comparison/output/'
+OUTPUT_DIR='../mouse_connectivity_models/paper/figures/model_comparison/output/'
 TOP_DIR=exp_input_dir
 ##LOG = True
 LOG = False
@@ -55,7 +55,7 @@ def main():
     logging.getLogger().setLevel(log_level)
 
     exp_exc_path=sys.argv[1]
-    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", exp_exc_path)
+    EXPERIMENTS_EXCLUDE_JSON = os.path.join("../mouse_connectivity_models/paper/", exp_exc_path)
     experiments_exclude = ju.read(EXPERIMENTS_EXCLUDE_JSON)
 
 
@@ -110,7 +110,7 @@ def main():
 
     outfile_suffix = sys.argv[2]
     if outfile_suffix == "original_oh_211_regions" or outfile_suffix == "rebuilt_oh_211_regions":
-        ontological_order = np.loadtxt("../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt")
+        ontological_order = np.loadtxt("../../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt")
     
     source_mask = Mask.from_cache(cache, structure_ids=structure_ids, hemisphere_id=2)
     source_key = source_mask.get_key(structure_ids=ontological_order)

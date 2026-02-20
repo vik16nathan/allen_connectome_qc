@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+cd ..
 #GOAL: get "true" injection density in annotated area by multiplying injection fraction with injection density
 #use a binary threshold to keep only inj/proj files over the threshold
 if [[ $# -lt 2 ]]; then

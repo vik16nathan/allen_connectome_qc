@@ -6,7 +6,7 @@ if [[ $# -lt 3 ]]; then
     exit 1
 fi
 
-source .venv/bin/activate
+source ../.venv/bin/activate
 excluded_exps_file=$1
 list_rgn_numbers_file=$2
 suffix=$3

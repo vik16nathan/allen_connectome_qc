@@ -1,6 +1,6 @@
 library("pacman")
 pacman::p_load(dplyr, readr, readxl, stringr, robustbase, jsonlite)
-setwd(".")
+setwd("..")
 
 harmonized_qc_dir <- "./harmonized_ratings/"
 
