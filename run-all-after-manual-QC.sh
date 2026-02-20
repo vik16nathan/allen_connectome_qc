@@ -1,4 +1,6 @@
-#!/bin/bash                                                                                           
+#!/bin/bash
+set -euo pipefail
+
 ##################################################################################################
 
 #### NOTE: All scripts here run with injection thresholds of 0.5 and projection thresholds of 0.1###
