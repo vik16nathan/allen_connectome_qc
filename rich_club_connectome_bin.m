@@ -1,7 +1,7 @@
-%%add path for Brain Connectivity Toolbox
+%% add path for Brain Connectivity Toolbox
+addpath('2019_03_03_BCT/');
 % Ensure MATLAB starts in the script folder
 cd(fileparts(mfilename('fullpath')))
-addpath('2019_03_03_BCT/');
 output_dir='../derivatives/rich_club/';
 
 %%

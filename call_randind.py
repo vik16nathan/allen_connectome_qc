@@ -36,7 +36,7 @@ def parse_args():
                         help='Path to input .mat file with community assignments.')
     parser.add_argument('--flag', type=int, required=True,
                         help='Analysis mode: 0 for within-gamma, 1 for across-gamma.')
-    parser.add_argument('--suffix', type=str,
+    parser.add_argument('--suffix', type=str, default='',
                         help='Output file suffix.')
     args=parser.parse_args()
     return args
