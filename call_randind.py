@@ -1,3 +1,10 @@
+"""Compute adjusted mutual information between community partitions.
+
+Computes pairwise adjusted mutual information scores between community
+assignments from Louvain clustering across multiple gamma values and
+repetitions.
+"""
+
 import numpy as np
 from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn.metrics.cluster import adjusted_mutual_info_score
@@ -7,13 +14,30 @@ import pandas as pd
 import itertools
 
 def call_rand(ar1,ar2):
+    """Compute adjusted mutual information between two label arrays.
+
+    Args:
+        ar1: First array of cluster labels.
+        ar2: Second array of cluster labels.
+
+    Returns:
+        Adjusted mutual information score.
+    """
     return adjusted_mutual_info_score(ar1,ar2)
 
 def parse_args():
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace with matfile, flag, and suffix.
+    """
     parser=argparse.ArgumentParser(description='Permutation for connectivity')
-    parser.add_argument('--matfile', type=str)
-    parser.add_argument('--flag', type=int)
-    parser.add_argument('--suffix', type=str)
+    parser.add_argument('--matfile', type=str, required=True,
+                        help='Path to input .mat file with community assignments.')
+    parser.add_argument('--flag', type=int, required=True,
+                        help='Analysis mode: 0 for within-gamma, 1 for across-gamma.')
+    parser.add_argument('--suffix', type=str,
+                        help='Output file suffix.')
     args=parser.parse_args()
     return args
 

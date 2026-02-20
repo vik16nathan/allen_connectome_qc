@@ -1,20 +1,51 @@
+"""Updated model data loading with support for custom region lists.
+
+Provides the ModelData class for loading and preparing Allen Institute
+connectivity experiment data, with region customization for Oh et al., 2014
+style analyses.
+"""
+
 import numpy as np
 from mcmodels.core import VoxelData, RegionalData
 from mcmodels.utils import unionize
 import pandas as pd
 
 class ModelData(object):
+    """Load and prepare Allen connectivity experiment data.
+
+    Args:
+        cache: VoxelModelCache instance for data access.
+        structure_id: Allen structure ID for the root injection structure.
+    """
 
     def __init__(self, cache, structure_id):
         self.cache = cache
         self.structure_id = structure_id
 
     def get_structure_id(self, acronym):
+        """Look up a structure ID by its acronym.
+
+        Args:
+            acronym: Allen brain structure acronym.
+
+        Returns:
+            Integer structure ID.
+        """
         structure_tree = self.cache.get_structure_tree()
         return structure_tree.get_structures_by_acronym([acronym])[0]['id']
 
-    def get_experiment_ids(self, eid_set=None, experiments_exclude=[]):
-        """gets model data from ..."""
+    def get_experiment_ids(self, eid_set=None, experiments_exclude=None):
+        """Get filtered experiment IDs for model building.
+
+        Args:
+            eid_set: Optional set of experiment IDs to restrict to.
+            experiments_exclude: List of experiment IDs to exclude.
+
+        Returns:
+            Set of experiment IDs after filtering.
+        """
+        if experiments_exclude is None:
+            experiments_exclude = []
 
         # get experiments
         experiments = self.cache.get_experiments(
@@ -26,6 +57,14 @@ class ModelData(object):
         return set(experiment_ids) & set(eid_set) - set(experiments_exclude)
 
     def get_voxel_data(self, **kwargs):
+        """Get voxel-level experiment data.
+
+        Args:
+            **kwargs: Passed to get_experiment_ids for filtering.
+
+        Returns:
+            VoxelData instance with loaded experiment data.
+        """
         experiment_ids = self.get_experiment_ids(**kwargs)
 
         data = VoxelData(self.cache, injection_structure_ids=[self.structure_id],
@@ -35,6 +74,17 @@ class ModelData(object):
         return data
 
     def get_regional_data(self, rgn_list_path, high_res=False, threshold_injection=True, **kwargs):
+        """Get regionalized experiment data using a custom region list.
+
+        Args:
+            rgn_list_path: Path to CSV file containing region IDs.
+            high_res: Whether to use high-resolution regional data.
+            threshold_injection: Whether to threshold small injection values.
+            **kwargs: Passed to get_experiment_ids for filtering.
+
+        Returns:
+            Data container with injection and projection matrices.
+        """
         def get_summary_structure_ids(): ###toggle/change this to be consistent with Oh et al., 2014
             #structure_tree = self.cache.get_structure_tree()
             #structures = structure_tree.get_structures_by_set_id([687527945])

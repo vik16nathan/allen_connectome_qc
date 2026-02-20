@@ -1,4 +1,11 @@
+"""Build homogeneous connectivity model with updated experiment exclusions.
+
+Fits a homogeneous (Oh et al., 2014-style) connectivity model with custom
+region lists and experiment exclusions, then saves results as CSV.
+"""
+
 from __future__ import division
+import argparse
 import os
 import logging
 
@@ -26,12 +33,35 @@ HIGH_RES = False
 OUTPUT_DIR='./mouse_connectivity_models/paper/figures/model_comparison/output/'
 THRESHOLD_INJECTION = True
 
-def get_summary_structure_ids(rgn_list_path): ###change this to be consistent with Oh et al., 2014
+def get_summary_structure_ids(rgn_list_path):
+    """Load region structure IDs from a text file.
+
+    Args:
+        rgn_list_path: Path to a headerless CSV file with region IDs.
+
+    Returns:
+        Series of structure IDs.
+    """
     structures = pd.read_csv(rgn_list_path, header=None).loc[:,0]
     return structures
 
 
-def fit(cache, rgn_list_path, eid_set=None, experiments_exclude=[], high_res=False, threshold_injection=True):
+def fit(cache, rgn_list_path, eid_set=None, experiments_exclude=None, high_res=False, threshold_injection=True):
+    """Fit the homogeneous connectivity model.
+
+    Args:
+        cache: VoxelModelCache instance for data access.
+        rgn_list_path: Path to file listing region numbers.
+        eid_set: Optional set of experiment IDs to restrict to.
+        experiments_exclude: List of experiment IDs to exclude.
+        high_res: Whether to use high-resolution data.
+        threshold_injection: Whether to threshold injection volumes.
+
+    Returns:
+        DataFrame of ipsi/contra connectivity weights.
+    """
+    if experiments_exclude is None:
+        experiments_exclude = []
     logging.debug('getting data')
     ipsi_data = ModelData(cache, ROOT_ID).get_regional_data(rgn_list_path,
         eid_set=eid_set, experiments_exclude=experiments_exclude, high_res=high_res,
@@ -68,7 +98,27 @@ def fit(cache, rgn_list_path, eid_set=None, experiments_exclude=[], high_res=Fal
     return pd.concat((ipsi_w, contra_w), keys=('ipsi', 'contra'), axis=1)
 
 
+def parse_args():
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace.
+    """
+    parser = argparse.ArgumentParser(
+        description='Build homogeneous connectivity model with updated experiment exclusions.')
+    parser.add_argument('excluded_exps_file', type=str,
+                        help='Path to JSON file listing experiments to exclude.')
+    parser.add_argument('rgn_list_path', type=str,
+                        help='Path to file listing region numbers.')
+    parser.add_argument('suffix', type=str,
+                        help='Output file suffix (e.g., "original", "rebuilt").')
+    return parser.parse_args()
+
+
 def main():
+    """Build and save the homogeneous connectivity model."""
+    args = parse_args()
+
     input_data = ju.read(INPUT_JSON)
 
     manifest_file = input_data.get('manifest_file')
@@ -79,8 +129,7 @@ def main():
 
     # experiments to exclude
     ###CHANGED FROM ORIGINAL LIST TO ACCOUNT FOR QC FAILURE MODES
-    exp_exc_path=sys.argv[1]
-    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", exp_exc_path)
+    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", args.excluded_exps_file)
     experiments_exclude = ju.read(EXPERIMENTS_EXCLUDE_JSON)
 
     # load hyperparameter dict
@@ -92,15 +141,13 @@ def main():
     fit_kwargs = dict(high_res=HIGH_RES, threshold_injection=THRESHOLD_INJECTION,
                       experiments_exclude=experiments_exclude)
     
-    rgn_list_path=sys.argv[2]
-    model = fit(cache, rgn_list_path, **fit_kwargs)
+    model = fit(cache, args.rgn_list_path, **fit_kwargs)
 
     # write results
     logging.debug('saving')
-    outfile_suffix = sys.argv[3]
     output_file = os.path.join(
         OUTPUT_DIR,
-        'homogeneous-%s-model_%s.csv' % (suffix, outfile_suffix)
+        'homogeneous-%s-model_%s.csv' % (suffix, args.suffix)
      )
 
 

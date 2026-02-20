@@ -1,4 +1,11 @@
+"""Build voxel connectivity model with updated experiment exclusions.
+
+Fits a voxel-level connectivity model for each major brain structure,
+regionalizes the resulting weights, and saves connection metrics as CSV files.
+"""
+
 from __future__ import division
+import argparse
 import os
 import logging
 
@@ -28,6 +35,18 @@ LOG = False
 
 def fit_structure(cache, structure_id, experiments_exclude, kernel_params,
                   model_option='standard'):
+    """Fit a voxel model for a single brain structure.
+
+    Args:
+        cache: VoxelModelCache instance for data access.
+        structure_id: Allen structure ID to fit.
+        experiments_exclude: List of experiment IDs to exclude.
+        kernel_params: Dictionary of kernel hyperparameters.
+        model_option: Model variant, 'standard' or 'log'.
+
+    Returns:
+        Tuple of (VoxelData, fitted regression model).
+    """
     data = ModelData(cache, structure_id).get_voxel_data(
         experiments_exclude=experiments_exclude)
 
@@ -44,7 +63,25 @@ def fit_structure(cache, structure_id, experiments_exclude, kernel_params,
     return data, error.fit(**nw_kwargs, option=model_option)
 
 
+def parse_args():
+    """Parse command-line arguments.
+
+    Returns:
+        Parsed argument namespace with excluded_exps_file and suffix.
+    """
+    parser = argparse.ArgumentParser(
+        description='Build voxel connectivity model with updated experiment exclusions.')
+    parser.add_argument('excluded_exps_file', type=str,
+                        help='Path to JSON file listing experiments to exclude.')
+    parser.add_argument('suffix', type=str,
+                        help='Output file suffix (e.g., "original", "rebuilt").')
+    return parser.parse_args()
+
+
 def main():
+    """Build and save the regionalized voxel connectivity model."""
+    args = parse_args()
+
     input_data = ju.read(INPUT_JSON)
 
     structures = input_data.get('structures')
@@ -54,8 +91,7 @@ def main():
     log_level = input_data.get('log_level', logging.DEBUG)
     logging.getLogger().setLevel(log_level)
 
-    exp_exc_path=sys.argv[1]
-    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", exp_exc_path)
+    EXPERIMENTS_EXCLUDE_JSON = os.path.join("./mouse_connectivity_models/paper/", args.excluded_exps_file)
     experiments_exclude = ju.read(EXPERIMENTS_EXCLUDE_JSON)
 
 
@@ -72,7 +108,7 @@ def main():
 
     # mask for reordering source
     annotation = cache.get_annotation_volume()[0]
-    cumm_source_mask = np.zeros(annotation.shape, dtype=np.int)
+    cumm_source_mask = np.zeros(annotation.shape, dtype=int)
 
     offset = 1 # start @ 1 so that nonzero can be used
     weights, nodes = [], []
@@ -85,7 +121,7 @@ def main():
         w = reg.get_weights(data.injection_mask.coordinates)
 
         # assign ordering to full source
-        ordering = np.arange(offset, w.shape[0] + offset, dtype=np.int)
+        ordering = np.arange(offset, w.shape[0] + offset, dtype=int)
         offset += w.shape[0]
 
         # get source mask
@@ -108,7 +144,7 @@ def main():
     logging.debug('regionalizing voxel weights')
     ontological_order = get_ordered_summary_structures(cache)
 
-    outfile_suffix = sys.argv[2]
+    outfile_suffix = args.suffix
     if outfile_suffix == "original_oh_211_regions" or outfile_suffix == "rebuilt_oh_211_regions":
         ontological_order = np.loadtxt("../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_ccfv3.txt")
     
@@ -130,7 +166,7 @@ def main():
 
     # regionalized
     logging.debug('saving to directory: %s', output_dir)
-    outfile_suffix = sys.argv[2]
+    outfile_suffix = args.suffix
     get_metric('connection_density').to_csv(
         os.path.join(output_dir, 'connection_density_%s.csv' % outfile_suffix))
     get_metric('connection_strength').to_csv(
