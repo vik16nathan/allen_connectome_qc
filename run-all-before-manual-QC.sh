@@ -1,14 +1,4 @@
 #!/bin/bash                                                                                           
-module load anaconda R
-module load minc-toolkit-v2
-module load RMINC
-
-
-##download PyQC
-git clone https://github.com/CoBrALab/PyQC
-cd PyQC
-uv sync
-cd ..
 
 ##download and binarize inj/proj data @ diff thresholds
 ###all command-line arguments are in the order inj_thresh proj_thresh
