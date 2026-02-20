@@ -19,7 +19,7 @@ tracer_dir <- "../preprocessed/knox_connectome_tracers/"
 ##################FIGURE 2B###############################################
 tracer_num_vox_oob_vent_df <- as.data.frame(read.csv(paste0("tables/knox_oob_vent_df_inj",inj_thresh,"_proj",proj_thresh,".csv")))
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$tracer != 310207648),]
-# Step 1: Identify SD outliers (unchanged)
+# Step 1: Identify SD outliers (>4 SD from mean in either dimension)
 zscore_thresh <- 4
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
   mutate(

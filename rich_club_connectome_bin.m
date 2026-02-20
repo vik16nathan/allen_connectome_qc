@@ -1,7 +1,7 @@
-%%add path for Brain Connectivity Toolbox% Ensure MATLAB starts in the script folder
+%%add path for Brain Connectivity Toolbox
+% Ensure MATLAB starts in the script folder
 cd(fileparts(mfilename('fullpath')))
 addpath('2019_03_03_BCT/');
-% Ensure MATLAB starts in the script folder
 output_dir='../derivatives/rich_club/';
 
 %%
@@ -14,10 +14,10 @@ knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_dens
 
 
 %%for percentile_threshold=[70, 80, 90]
-for percentile_threshold=[80]
+for percentile_threshold=[80]  % keep top 20% of connections
     for i=1:numel(knox_rgn_conn_matrices) %%%run for old/new connectomes
-        %%set same random seed
-        rng(123); % Sets the seed to 123
+        %%set same random seed for reproducibility
+        rng(123);
         knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});
         suffix=char(knox_rgn_conn_suffixes{i});
         %get rid of indices
@@ -37,8 +37,8 @@ for percentile_threshold=[80]
         %--------------------------------------------------------------------------
         % find rich club in a structural network
         %--------------------------------------------------------------------------
-        nswap = 2^6;    % no. of flips/edge
-        nrand = 1000;     % no. of randomized networks
+        nswap = 2^6;    % number of edge swaps per randomization (64)
+        nrand = 1000;   % number of randomized null networks for significance testing
         
         k = sum(sc,2);                  % degree of each node
         %kmax = 118;                      % max degree

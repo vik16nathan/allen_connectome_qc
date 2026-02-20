@@ -27,7 +27,7 @@ knox_rgn_conn_suffixes={'old_strength', 'new_strength', 'old_density', 'new_dens
 agreement_thresh=0.5; 
 %%
 %%for percentile_threshold=[70, 80, 90]
-for percentile_threshold=[80]
+for percentile_threshold=[80]  % keep top 20% of connections
     for i=1:numel(knox_rgn_conn_matrices)
         %%binarize structural connectivity
         knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});
@@ -43,10 +43,10 @@ for percentile_threshold=[80]
         sc(sc <= numeric_thresh) = 0; % binarize using % threshold (keep top 1 - % conns)
         %%
         nodes_ids=1:1:size(sc,1);
-        gamvals = 0.3:0.05:3;
+        gamvals = 0.3:0.05:3;  % range of resolution parameters for Louvain
         ngam = length(gamvals);
         
-        nreps = 100;
+        nreps = 100;  % number of repetitions per gamma for consensus
         ci = zeros(n,ngam,nreps);   % community assignments
         q = zeros(ngam,nreps);      % modularity value
         ciu = zeros(n,ngam);        % consensus communities
@@ -169,7 +169,7 @@ for percentile_threshold=[80]
         com_asigns=zeros(length(B),nreps);
         q=zeros(length(B),nreps);
         
-        gamma_chosen=21; %%%%index of "center" of largest cluster of mutual information scores (see above)
+        gamma_chosen=21; % index into gamvals (=1.3); center of largest mutual information cluster
         parfor irep = 1:nreps
             [com_asigns(:,irep),q(irep)] = community_louvain(B,gamvals(gamma_chosen),[],[]);
         end
