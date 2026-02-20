@@ -1,6 +1,13 @@
 #!/bin/bash
+set -euo pipefail
+
 # Define file paths
 ###NOTE: can change threshold as needed
+if [[ $# -lt 2 ]]; then
+    echo "Usage: $0 <inj_thresh> <proj_thresh>" >&2
+    exit 1
+fi
+
 inj_thresh=$1
 proj_thresh=$2
 
@@ -20,8 +27,8 @@ mkdir -p "${qc_jpg_dir_proj}"
 #qc_jpg_dir_proj="../derivatives/knox_proj/bin0.1/"
 allen_50um_template_path="../preprocessed/allen_template_inputs/average_template_50.mnc"
 
-mkdir -p ${qc_jpg_dir_inj}
-mkdir -p ${qc_jpg_dir_proj}
+mkdir -p "${qc_jpg_dir_inj}"
+mkdir -p "${qc_jpg_dir_proj}"
 
 csv_file_main_exps="./knox_experiment_csvs/knox_experiments_included.csv"
 csv_file_removed_exps="./knox_experiment_csvs/knox_excluded_tracers.csv"
@@ -52,13 +59,13 @@ for csv_file in "${!file_to_outdir[@]}"; do
 
           ./make_slice_images.sh \
           --label-overlay-opacity 0.5 \
-          --label-overlay $inj_file_thresh \
+          --label-overlay "$inj_file_thresh" \
           "${allen_50um_template_path}" \
           "${qc_jpg_dir_inj}${outdir_extension}/${tracer}.jpg"
 
           ./make_slice_images.sh \
           --label-overlay-opacity 0.5 \
-          --label-overlay $proj_file_thresh \
+          --label-overlay "$proj_file_thresh" \
           "${allen_50um_template_path}" \
           "${qc_jpg_dir_proj}${outdir_extension}/${tracer}.jpg"
      done
@@ -84,8 +91,8 @@ for tracer in "${tracers_inj_not_in_knox[@]}"; do
 
       ./make_slice_images.sh \
      --label-overlay-opacity 0.5 \
-     --crop-file $inj_file_thresh \
-     --label-overlay $inj_file_thresh \
+     --crop-file "$inj_file_thresh" \
+     --label-overlay "$inj_file_thresh" \
      "${allen_50um_template_path}" \
      "${qc_jpg_dir_inj}/${tracer}.jpg"
 done
@@ -97,8 +104,8 @@ for tracer in "${tracers_inj[@]}"; do
 
       ./make_slice_images.sh \
      --label-overlay-opacity 0.5 \
-     --crop-file $inj_file_thresh \
-     --label-overlay $inj_file_thresh \
+     --crop-file "$inj_file_thresh" \
+     --label-overlay "$inj_file_thresh" \
      "${allen_50um_template_path}" \
      "${qc_jpg_dir_inj}/${tracer}.jpg"
 done
@@ -108,8 +115,8 @@ for tracer in "${tracers_proj[@]}"; do
 
      ./make_slice_images.sh \
      --label-overlay-opacity 0.5 \
-     --crop-file $proj_file_thresh \
-     --label-overlay $proj_file_thresh \
+     --crop-file "$proj_file_thresh" \
+     --label-overlay "$proj_file_thresh" \
      "${allen_50um_template_path}" \
      "${qc_jpg_dir_proj}/${tracer}.jpg"
 done

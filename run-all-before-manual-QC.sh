@@ -1,4 +1,5 @@
-#!/bin/bash                                                                                           
+#!/bin/bash
+set -euo pipefail
 
 ##download and binarize inj/proj data @ diff thresholds
 ###all command-line arguments are in the order inj_thresh proj_thresh

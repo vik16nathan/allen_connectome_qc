@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 ###update allensdk download function to accommodate longer timeouts and download all data
 ### === Step: increase allensdk HTTP stream timeout ===

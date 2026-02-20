@@ -59,8 +59,7 @@ vent_volume[csf_voxels] <- 1
 mincWriteVolume(vent_volume, "../preprocessed/allen_template_inputs/vent_voxels_label_file_50um.mnc",
                 like=aba_label_filepath)
 
-##output a version of the ventricles that DOES NOT include the third ventricle
-##or the cerebral aqueduct (too thin, close to midline)
+##exclude ventricles that are too close to midline (third ventricle ID=129, cerebral aqueduct ID=140)
 csf_labels_filt <- csf_labels[which(! csf_labels %in% c("129","140"))]
 csf_voxels_filt <- which(aba_label_file %in% csf_labels_filt)
 vent_volume <- rep(0, length(aba_label_file))
@@ -74,7 +73,7 @@ mincWriteVolume(vent_volume, "../preprocessed/allen_template_inputs/vent_voxels_
 ##load list of Knox connectome tracers
 knox_experiments_included <- as.data.frame(read.csv("knox_experiment_csvs/knox_experiments_included.csv"))
 
-###remove missing experiment
+###remove experiment with missing data (310207648 has no Allen API data)
 knox_experiments_included <- knox_experiments_included[which(knox_experiments_included$id != 310207648),]
 tracer_list <- unlist(knox_experiments_included)
 
