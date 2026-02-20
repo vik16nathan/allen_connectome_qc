@@ -1,9 +1,3 @@
-"""Scoring functions for voxel and regional connectivity model evaluation.
-
-Provides hybrid scorers that combine voxel-level and region-level mean
-squared relative error for cross-validation of connectivity models.
-"""
-
 from __future__ import division
 import numpy as np
 
@@ -15,12 +9,6 @@ from mcmodels.utils import squared_norm
 
 
 class HybridScorer(object):
-    """Combined voxel and regional scoring for connectivity models.
-
-    Args:
-        cache: VoxelModelCache instance for mask generation.
-        structure_ids: Optional list of structure IDs for regionalization.
-    """
 
     DEFAULT_STRUCTURE_SET_ID = 687527945
 
@@ -91,21 +79,7 @@ class LogHybridScorer(HybridScorer):
 
 
 def unionize(v, ipsi_key, contra_key, ipsi_regions, contra_regions):
-    """Aggregate voxel-level predictions to regional level.
-
-    Args:
-        v: Voxel-level matrix with shape (n_samples, n_voxels).
-        ipsi_key: Array mapping voxels to ipsilateral region IDs.
-        contra_key: Array mapping voxels to contralateral region IDs.
-        ipsi_regions: Ordered array of ipsilateral region IDs.
-        contra_regions: Ordered array of contralateral region IDs.
-
-    Returns:
-        Matrix of shape (n_samples, n_ipsi_regions + n_contra_regions).
-
-    Raises:
-        ValueError: If keys are incompatible or size mismatches.
-    """
+    """unionizes v (:, len(k)) to regions defined in key"""
     if ipsi_key.shape != contra_key.shape:
         # NOTE: better error message
         raise ValueError("keys are incompatible")
@@ -125,16 +99,7 @@ def unionize(v, ipsi_key, contra_key, ipsi_regions, contra_regions):
 
 
 def mean_squared_relative_error(y_true, y_pred, multioutput='uniform_average'):
-    """Compute mean squared relative error between predictions and targets.
-
-    Args:
-        y_true: Ground truth values.
-        y_pred: Predicted values.
-        multioutput: Aggregation strategy for multi-output.
-
-    Returns:
-        Scalar relative error score.
-    """
+    """Scorer from ..."""
     _, y_true, y_pred, _ = _check_reg_targets(y_true, y_pred, multioutput)
     #result = squared_norm(y_true - y_pred) / max(squared_norm(y_true), squared_norm(y_pred))
     result = 2 * squared_norm(y_true - y_pred) / (squared_norm(y_true) + squared_norm(y_pred))
