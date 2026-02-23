@@ -40,3 +40,6 @@ gdown --id "$FILE_ID" -O "$ZIP_NAME"
 # unzip into current directory
 unzip -o "$ZIP_NAME"
 
+##############SET UP DIRECTORY STRUCTURE#####################
+mkdir ../derivatives
+mkdir ../preprocessed
