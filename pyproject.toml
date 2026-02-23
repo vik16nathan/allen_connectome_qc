@@ -56,6 +56,7 @@ dependencies = [
     "propcache==0.3.1",
     "psycopg2-binary==2.9.10",
     "py-cpuinfo==9.0.0",
+    "pyminc==0.57",
     "pynrrd==1.1.3",
     "pynwb==2.8.3",
     "pyparsing==3.2.3",

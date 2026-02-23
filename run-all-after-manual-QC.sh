@@ -1,12 +1,21 @@
 #!/bin/bash
+source load-all-modules.sh
 set -euo pipefail
 
 ##################################################################################################
-
-#### NOTE: All scripts here run with injection thresholds of 0.5 and projection thresholds of 0.1###
 cd after_manual_qc
-Rscript compare_manual_qc_both_raters.R
+#### NOTE: All scripts here run with injection thresholds of 0.5 and projection thresholds of 0.1###
+
+#####THIS STEP REQUIRES RATINGS. Can skip and using ratings from Nathan et al., 2026, which are in harmonized_ratings
+#../derivatives/knox_inj/bin0.5/; ../derivatives/knox_proj/bin0.5/; 
+#./derivatives/knox_proj/bin0.5/allen_api_not_in_knox; ../derivatives/knox_proj/bin0.5/allen_api_not_in_knox
+
+#Rscript compare_manual_qc_both_raters.R
+
+###############START HERE########################################
+#################################################################
 Rscript overall_qc_exclusion.R
+##################################################################################################
 
 ###very slight modifications needed to mouse_connectivity_models to get things running (legacy python)
 ###single change to line 5 of scorers.py
@@ -17,12 +26,11 @@ oh_rgn_list="../../preprocessed/allen_template_inputs/oh_connectome_rgn_numbers_
 knox_region_list="../../preprocessed/allen_template_inputs/knox_connectome_rgn_numbers_ccfv3.txt"
 
 ###rebuild connectomes with the original list of experiments to exclude from Knox et al., 2018
-source .venv/bin/activate
+source ../.venv/bin/activate
 ./rebuild_oh_connectome.sh "experiments_exclude.json" ${oh_rgn_list} "original"
 ./rebuild_oh_connectome.sh "experiments_exclude.json" ${knox_region_list} "original_291"
 ./rebuild_knox_connectome.sh "experiments_exclude.json" "original"
 ./rebuild_knox_connectome.sh "experiments_exclude.json" "original_oh_211_regions"
-./rebuild_knox_connectome.sh "experiments_exclude_updated.json" "rebuilt_oh_211_regions" 
 
 ###rebuild connectomes with increased list of experiments to exclude post-QC
 ./rebuild_oh_connectome.sh "experiments_exclude_updated.json" ${oh_rgn_list} "rebuilt"
@@ -51,7 +59,7 @@ mkdir -p figures/oh/
 mkdir -p "../derivatives/excluded_tracer_aggregate_volumes/"
 
 
-cd visualizations/
+cd visualizations/ 
 ###misc - manually fill in experiments in query.csv with missing injection regions (available on website)
 Rscript fill_in_missing_knox_tracer_regions.R
 

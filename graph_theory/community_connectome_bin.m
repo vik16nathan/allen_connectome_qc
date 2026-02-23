@@ -5,7 +5,6 @@
 cd(fileparts(mfilename('fullpath')))
 
 %%set random seed for reproducibility
-rng(123);
 addpath("../2019_03_03_BCT/");
 output_dir='../../derivatives/community_louvain/';
 rich_club_dir='../../derivatives/rich_club/';
@@ -29,6 +28,9 @@ agreement_thresh=0.5;
 %%for percentile_threshold=[70, 80, 90]
 for percentile_threshold=[80]  % keep top 20% of connections
     for i=1:numel(knox_rgn_conn_matrices)
+        %%set seed for reproducibility
+        rng(123);
+        
         %%binarize structural connectivity
         knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});
         knox_rgn_conn_names=knox_rgn_conn_matrix_original(1,2:size(knox_rgn_conn_matrix_original, 2));

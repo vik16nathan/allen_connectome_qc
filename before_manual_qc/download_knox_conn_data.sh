@@ -1,20 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 cd ..
-#######STEP 1: Download Template and Label Files############################
-allen_template_dir="../preprocessed/allen_template_inputs/"
-mkdir -p "${allen_template_dir}"
-
-##download 50 micron template
-wget -O "${allen_template_dir}/average_template_50.nrrd" "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/average_template/average_template_50.nrrd"
-python transform_space.py "${allen_template_dir}/average_template_50.nrrd" "${allen_template_dir}/average_template_50.mnc" -v RAS -w MICe -x 1 --volume_type uint
-
-##download label file
-wget -O "${allen_template_dir}/annotation_25.nrrd"  "https://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/annotation_25.nrrd"
-python transform_space.py "${allen_template_dir}/annotation_25.nrrd" "${allen_template_dir}/annotation_25.mnc" -v RAS -w MICe -x 1 --volume_type uint
-
-#####TODO: fill-in conversion to relabelled label file from Yohan######
-######and mapping from relabelled label file --> mask file########
 
 #############################################################################
 ########STEP 2: Download Experiment Tracer Files#############################
@@ -46,8 +32,8 @@ mkdir -p "${not_in_knox_output_dir}"
 
 declare -A file_to_outdir=(
     ["$csv_file_not_in_knox_exps"]="$not_in_knox_output_dir"
-    #["$csv_file_main_exps"]="$main_exps_output_dir"
-    #["$csv_file_removed_exps"]="$removed_exps_output_dir"
+    ["$csv_file_main_exps"]="$main_exps_output_dir"
+    ["$csv_file_removed_exps"]="$removed_exps_output_dir"
 )
 
 for csv_file in "${!file_to_outdir[@]}"; do

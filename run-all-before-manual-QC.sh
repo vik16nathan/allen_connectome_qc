@@ -1,4 +1,5 @@
 #!/bin/bash
+./load-all-modules.sh
 set -euo pipefail
 cd before_manual_qc
 ##download and binarize inj/proj data @ diff thresholds

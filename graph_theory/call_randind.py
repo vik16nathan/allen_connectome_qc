@@ -13,6 +13,8 @@ import scipy.io
 import pandas as pd
 import itertools
 
+output_dir='../../derivatives/community_louvain/'
+
 def call_rand(ar1,ar2):
     """Compute adjusted mutual information between two label arrays.
 
@@ -43,7 +45,6 @@ def parse_args():
 
 if __name__== '__main__':
 
-    output_dir='../derivatives/community_louvain/'
     inputs=parse_args()
     mat = scipy.io.loadmat(inputs.matfile)
     if inputs.flag==0:
