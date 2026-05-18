@@ -47,22 +47,26 @@ Note that there are two stages: before manual QC (downloading/thresholding/autom
 7. `overall_qc_exclusion.R`: Creates a binary matrix of all experiments to remove (tracers_to_remove.csv), with rows representing experiment IDs and columns representing all possible failure modes. An entry of 1 in row i and column j indicates that experiment i failed in mode j. Use the experiment IDs to update experiments_to_exclude.json. 
 
 ### Rebuilding Connectomes
-8. `rebuild_knox_connectome.sh / rebuild_oh_connectome.sh`: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within `experiments_exclude.json` (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the new file replacing `experiments_exclude.json`.
+8. `run_hyperparameter_selection_new_excluded.py / run_nested_voxel_new_excluded.py / run_nested_homogeneous_new_excluded.py`:  Same as the code from Knox et al., 2018, with a single change at the beginning of each file to update the list of excluded experiments. Runs nested leave-one-out cross-validation to reproduce error tables in Knox et al., 2018, assessing whether the rebuilt connectomes trained on the QC'ed subset of experiments result in more accurate predictions of "left-out" connections. Note that `run_hyperparameter_selection_new_excluded.py` is necessary to retrain the smoothness parameters before refitting the RVM connectome in (9). 
+9. `rebuild_knox_connectome.sh / rebuild_oh_connectome.sh`: Before running, create a new experiments_exclude.json file using the overall experiments excluded in manual/automated QC in addition to all experiments originally within `experiments_exclude.json` (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper). The python scripts build_model_new_excluded.py and build_homogeneous_model_new_excluded.py are almost identical to build_model.py and build_homogeneous_model.py within https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison, except the new file replacing `experiments_exclude.json`.
 
 * Note: I also modified `get_regional_data()` in `model_data.py` (https://github.com/AllenInstitute/mouse_connectivity_models/tree/master/paper/figures/model_comparison/helpers) to include the 211 Oh connectome regions (minus SUBd and SUBv) that are included in the Allen CCFv3 labels, rather than the 291 regions defined in Knox et al. This choice enables direct comparison/downstream application of the rebuilt homogeneous model in place of the Oh connectome.
 
 ### Graph Theory Analyses
-Code for (10) and (11) provided by Lizette Herrera-Portillo from her recent manuscript (https://doi.org/10.1101/2025.05.10.653278) 
+Code for (11) and (12) provided by Lizette Herrera-Portillo from her recent manuscript (https://doi.org/10.1101/2025.05.10.653278) 
 
-9. `process_flip_regionalized_knox_connectomes.R`: Since connectivity is only defined for right-hemisphere injections, but we need a full n x n matrix for all graph theoretical analyses, we assume that connectivity is symmetric across the midline to create a square connectivity matrix. We assume connectivity to the contralateral regions is the same as connectivity to the ipsilateral regions, but flipped across the midline (ex: if we know that the right DG is connected to the left CA1, we assume the left DG is connected to the right CA1. This assumption has been verified in the literature).
-10. `rich_club_connectome_bin.m`: Calculates rich club coefficient and topological rich club using the top 20% of region x region connections above. See *Rich Club Algorithm* in Supplementary Methods for more info.
-11. `community_connectome_bin.m`: Calculates Louvain community identity for the top 20% of region x region connections above; uses `call_randind.py` to calculate the mutual information between community assignments at various "resolution parameters" (gammas) to identify a stable community assignment. See *Community Detection Algorithm* in Supplementary Methods for more info.
+11. `process_flip_regionalized_knox_connectomes.R`: Since connectivity is only defined for right-hemisphere injections, but we need a full n x n matrix for all graph theoretical analyses, we assume that connectivity is symmetric across the midline to create a square connectivity matrix. We assume connectivity to the contralateral regions is the same as connectivity to the ipsilateral regions, but flipped across the midline (ex: if we know that the right DG is connected to the left CA1, we assume the left DG is connected to the right CA1. This assumption has been verified in the literature).
+12. `rich_club_connectome_bin.m`: Calculates rich club coefficient and topological rich club using the top 20% of region x region connections above. See *Rich Club Algorithm* in Supplementary Methods for more info.
+13. `community_connectome_bin.m`: Calculates Louvain community identity for the top 20% of region x region connections above; uses `call_randind.py` to calculate the mutual information between community assignments at various "resolution parameters" (gammas) to identify a stable community assignment. See *Community Detection Algorithm* in Supplementary Methods for more info.
 
-### Visualizations
-12. `figure_1_workflow.R`: Makes Methods workflow (Figure 1)
-13. `figure_2.R`: Makes individual figure plots for Figure 2
-14. `figure_3.R`: Makes figure plots for Figure 3, Supplementary Figure 1, and Supplementary Figure 2.
-15. `supp_fig_major_div_connectomes.R`: Makes Supplementary Figures 3, 5, 6, and 8 based on the choice of connectome/binarization threshold.
-16. `figure_4.R`: Makes figure plots visualizing the changes in the full regionalized voxel model (Figure 4) or homogeneous model (Supplementary Figure 4) based on the choice of Oh vs. Knox connectome. Also makes Supplementary Figure 7 at a 5% binarization threshold.
-17. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
+### Main Visualizations
+14. `figure_1_workflow.R`: Makes Methods workflow (Figure 1)
+15. `figure_2.R`: Makes individual figure plots for Figure 2
+16. `figure_3.R`: Makes figure plots for Figure 3, Supplementary Figure 1, and Supplementary Figure 2.
+17. `supp_fig_major_div_connectomes.R`: Makes Supplementary Figures 3, 5, 6, and 8 based on the choice of connectome/binarization threshold.
+18. `figure_4.R`: Makes figure plots visualizing the changes in the full regionalized voxel model (Figure 4) or homogeneous model (Supplementary Figure 4) based on the choice of Oh vs. Knox connectome. Also makes Supplementary Figure 7 at a 5% binarization threshold.
+19. `figure_5.R`: Visualizes graph theory results in Figure 5. Can also make Supplementary Figure 9 if using normalized connection density metric instead of normalized connection strength
 
+### Additional Validations
+20. `compare_error_tables.R`: compares LOOCV error after QC versus Table 1 of Knox et al. (see Table 3 of Nathan et al., 2026)
+21. `sensitivity_analysis.R`: examines the impact of various small parameter changes in automated QC, automated vs. manual QC, and binarization threshold changes (see Supplementary Figure 10 of Nathan et al., 2026)
