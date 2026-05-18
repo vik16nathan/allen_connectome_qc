@@ -22,6 +22,7 @@ dependencies = [
     "fonttools==4.58.2",
     "frozenlist==1.6.2",
     "future==1.0.0",
+    "gdown==5.2.1",
     "glymur==0.14.0.post1",
     "greenlet==3.2.3",
     "h5py==3.14.0",

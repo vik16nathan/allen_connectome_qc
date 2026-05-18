@@ -332,15 +332,91 @@ plot_hist_conn_strength <- function(vals_old, vals_new, output_dir) {
     theme_minimal(base_size = 30) +
     theme(legend.position = "top")
   
-  ggsave(paste0(output_dir, "supp_supp_fig_hist_conn_strength_median.png"), p,
+  ggsave(paste0(output_dir, "supp_fig_hist_conn_strength_median.png"), p,
          width = 32, height = 16, dpi = 300)
   
 }
 
 plot_hist_conn_strength(vals_old, vals_new, supp_fig_dir)
 
+
+###########CORRELATE RANK DIFFERENCE IN VALS_OLD VS. VALS_NEW#################
+library(ggplot2)
+
+######reload: make sure we have all values and don't exclude zeroes##########
+vals_old <- as.numeric(unlist(c(conn_ipsi_old,  conn_contra_old)))
+vals_new <- as.numeric(unlist(c(conn_ipsi_new,  conn_contra_new)))
+
+vals_old_rank <- rank(vals_old)
+vals_new_rank <- rank(vals_new)
+# Build data frame
+rank_df <- data.frame(
+  rank_old = vals_old_rank,
+  rank_new = vals_new_rank
+)
+
+n <- length(vals_old_rank)
+
+p <- ggplot(rank_df, aes(x = rank_old, y = rank_new)) +
+  geom_point(
+    color  = "#2166ac",
+    alpha  = 0.45,
+    size   = 1.8,
+    shape  = 16
+  ) +
+  geom_abline(
+    intercept = 0, slope = 1,
+    linetype  = "dashed",
+    color     = "#d73027",
+    linewidth = 0.7
+  ) +
+  scale_x_continuous(
+    limits = c(1, n),
+    expand = expansion(mult = 0.02),
+    labels = scales::comma
+  ) +
+  scale_y_continuous(
+    limits = c(1, n),
+    expand = expansion(mult = 0.02),
+    labels = scales::comma
+  ) +
+  labs(
+    x     = "Rank (old connectivity strength)",
+    y     = "Rank (new connectivity strength)",
+    title = "Rank correlation of connectivity strength"
+  ) +
+  theme_classic(base_size = 24) +
+  theme(
+    plot.title      = element_text(face = "bold", hjust = 0.5, margin = margin(b = 12)),
+    axis.title      = element_text(face = "bold"),
+    axis.text       = element_text(color = "grey30"),
+    axis.line       = element_line(color = "grey40"),
+    axis.ticks      = element_line(color = "grey40"),
+    panel.grid.major = element_line(color = "grey92", linewidth = 0.4),
+    plot.margin     = margin(20, 20, 20, 20)
+  ) +
+  annotate(
+    "text",
+    x     = n * 0.05, y = n * 0.97,
+    label = paste0("Spearman ρ = ",
+                   round(cor(vals_old_rank, vals_new_rank,
+                             method = "spearman"), 3)),
+    hjust = 0, size = 5, color = "grey20", fontface = "italic"
+  )
+
+ggsave(
+  paste0(supp_fig_dir, "supp_fig_3c_conn_strength_rank_corr.png"),
+  p,
+  width = 16, height = 16, dpi = 300
+)
+
+
+#################Overlap of the strongest connections###########################
+
+
+
 ################################################################################
-##########supp_figURE 4A: Diff. of New vs. Old Connection Strengths##################
+##########SUPP FIGURE 4A: Diff. of New vs. Old Connection Strengths##################
 make_md_table_mean <- function(row_levels, col_levels,
                                row_div_map, col_div_map, vals,
                                na.rm = TRUE, fill = NA_real_) {

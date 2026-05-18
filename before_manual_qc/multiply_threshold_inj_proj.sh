@@ -46,11 +46,11 @@ for csv_file in "${!file_to_outdir[@]}"; do
             continue
         fi
         tracer_dir="${output_dir}/${tracer}/"
-        mincmath -mult "${tracer_dir}injection_fraction.mnc" "${tracer_dir}injection_density.mnc" "${tracer_dir}injection_dens_times_frac.mnc"
+        mincmath -clobber -mult "${tracer_dir}injection_fraction.mnc" "${tracer_dir}injection_density.mnc" "${tracer_dir}injection_dens_times_frac.mnc"
 
         ##binary thresholds
-        mincmath -2 -seg -const2 ${inj_thresh} 999999 "${tracer_dir}injection_dens_times_frac.mnc" "${tracer_dir}injection_dens_times_frac_bin${inj_thresh}.mnc" 
-        mincmath -2 -seg -const2 ${proj_thresh} 999999 "${tracer_dir}projection_density.mnc" "${tracer_dir}projection_density_bin${proj_thresh}.mnc" 
+        mincmath -clobber -2 -seg -const2 ${inj_thresh} 999999 "${tracer_dir}injection_dens_times_frac.mnc" "${tracer_dir}injection_dens_times_frac_bin${inj_thresh}.mnc" 
+        mincmath -clobber -2 -seg -const2 ${proj_thresh} 999999 "${tracer_dir}projection_density.mnc" "${tracer_dir}projection_density_bin${proj_thresh}.mnc" 
 
         ##one percent thresholds
 

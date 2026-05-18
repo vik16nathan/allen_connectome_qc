@@ -3,8 +3,8 @@ source load-all-modules.sh
 
 ##############SET UP DIRECTORY STRUCTURE#####################
 
-mkdir "../derivatives"
-mkdir "../preprocessed"
+mkdir -p "../derivatives"
+mkdir -p "../preprocessed"
 
 #############################################################
 set -euo pipefail
@@ -33,7 +33,6 @@ uv pip install --no-build-isolation .
 ##download ggslicer for visualizations
 git clone https://github.com/yohanyee/ggslicer
 ###download Brain Connectivity Toolbox for graph theory
-set -e
 FILE_ID="1DmMvRnferBfGe057O-sZwB5jL4j8w1Hu"
 ZIP_NAME="BCT.zip"
 # install gdown if needed

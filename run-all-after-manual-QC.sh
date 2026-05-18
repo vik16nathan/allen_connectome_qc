@@ -14,7 +14,12 @@ cd after_manual_qc
 
 ###############START HERE########################################
 #################################################################
-Rscript overall_qc_exclusion.R
+
+#####run with different binarization thresholds (for automated QC)##
+Rscript overall_qc_exclusion.R 0.4 0.05
+Rscript overall_qc_exclusion.R 0.5 0.1
+Rscript overall_qc_exclusion.R 0.6 0.2
+
 ##################################################################################################
 
 ###very slight modifications needed to mouse_connectivity_models to get things running (legacy python)
@@ -37,6 +42,35 @@ source ../.venv/bin/activate
 ./rebuild_oh_connectome.sh "experiments_exclude_updated.json" ${knox_region_list} "rebuilt_291"
 ./rebuild_knox_connectome.sh "experiments_exclude_updated.json" "rebuilt" ##automatically writes out 291 regions
 ./rebuild_knox_connectome.sh "experiments_exclude_updated.json" "rebuilt_oh_211_regions" ##automatically writes out 211 rgns from Oh et al.
+
+##################SENSITIVITY ANALYSES############################
+###rebuild connectomes with automated-only experiment inclusions
+./rebuild_oh_connectome.sh "experiments_exclude_updated_automated_only.json" ${oh_rgn_list} "rebuilt_auto"
+./rebuild_knox_connectome.sh "experiments_exclude_updated_automated_only.json" "rebuilt_auto"
+
+
+##rebuild connectomes with different number of automated lower outliers for inj/proj voxel counts###
+./rebuild_oh_connectome.sh "experiments_exclude_updated_auto_inj0.5_proj0.1_lower_outliers_6.json" ${oh_rgn_list} "rebuilt_lo_6"
+./rebuild_knox_connectome.sh "experiments_exclude_updated_auto_inj0.5_proj0.1_lower_outliers_6.json" "rebuilt_lo_6"
+
+./rebuild_oh_connectome.sh "experiments_exclude_updated_auto_inj0.5_proj0.1_lower_outliers_8.json" ${oh_rgn_list} "rebuilt_lo_8"
+./rebuild_knox_connectome.sh "experiments_exclude_updated_auto_inj0.5_proj0.1_lower_outliers_8.json" "rebuilt_lo_8"
+
+############Leave-One-Out Cross-Validation Analyses from Knox et al.##############
+###this step will take a while
+
+python run_hyperparameter_selection_new_excluded.py
+python run_nested_voxel_new_excluded.py
+python run_nested_homogeneous_new_excluded.py
+
+###move old table (if it hasn't already been moved)
+if [ ! -f "../mouse_connectivity_models/paper/figures/model_comparison/output/cv_results_voxel-standard_homogeneous-standard-original.csv" ]; then
+    mv ../mouse_connectivity_models/paper/figures/model_comparison/output/cv_results_voxel-standard_homogeneous-standard.csv \
+       ../mouse_connectivity_models/paper/figures/model_comparison/output/cv_results_voxel-standard_homogeneous-standard-original.csv
+fi
+
+python ../mouse_connectivity_models/paper/figures/model_comparison/compile_table.py
+
 
 #################################################
 #############graph theory analyses###############
@@ -81,3 +115,9 @@ Rscript figure_4.R "knox" 0.05
 Rscript figure_4.R "oh" 0.05
 
 Rscript figure_5.R
+
+####compare LOOCV tables (Knox et al. vs. post-QC)####
+Rscript compare_error_tables.R
+
+###additional sensitivity analyses added
+Rscript sensitivity_analysis.R

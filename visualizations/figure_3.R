@@ -35,6 +35,61 @@ find_major_division <- function(label, major_division_dict, aba_region_labels) {
   colnames(major_division_dict)[which(major_division_dict %in% region_hierarchy_list)]
 }
 
+#############HELPER FUNCTION - CONVERT KNOX --> LABEL FILE REGIONS############
+##create a data frame converting Allen connectome regions --> label file regions 
+##one mesoscale region can correspond to multiple label file regions (children)
+
+metadata_comm_rich_club_old <- as.data.frame(read_csv("../derivatives/community_louvain/metadata_community_rich_club_old_strength_pct80.csv"))
+mesoscale_rgn_to_label_file_rgn_dict <- data.frame(matrix(ncol=2))
+colnames(mesoscale_rgn_to_label_file_rgn_dict) <- c("mesoscale region", "label file region")
+for(rgn in unique(metadata_comm_rich_club_old$names)) {
+  if(rgn %in% aba_label_file) {
+    mesoscale_rgn_to_label_file_rgn_dict <- rbind(mesoscale_rgn_to_label_file_rgn_dict, c(rgn, rgn))
+  } else {
+    #find the region's children
+    children <- as.numeric(aba_region_labels[which(aba_region_labels$parent_id == rgn) ,"structure ID"])
+    
+    #add rows to the data frame to convert from region --> child
+    mesoscale_rgn_to_label_file_rgn_dict <- rbind(mesoscale_rgn_to_label_file_rgn_dict, c(rgn, paste(children, collapse=",")))
+  }
+}
+
+mesoscale_rgn_to_label_file_rgn_dict <- mesoscale_rgn_to_label_file_rgn_dict[2:nrow(mesoscale_rgn_to_label_file_rgn_dict),]
+colnames(mesoscale_rgn_to_label_file_rgn_dict) <-  c("mesoscale region", "label file region")
+write_csv(mesoscale_rgn_to_label_file_rgn_dict, "../preprocessed/allen_template_inputs/mesoscale_rgn_to_label_file_rgn_dict.csv")
+
+mesoscale_to_label_file <- setNames(
+  lapply(mesoscale_rgn_to_label_file_rgn_dict[,"label file region"], function(x) as.integer(strsplit(x, ",")[[1]])),
+  as.character(mesoscale_rgn_to_label_file_rgn_dict[,"mesoscale region"])
+)
+
+print(mesoscale_to_label_file[["184"]])
+############################################################################################
+################Updated helper: map structure counts onto label file voxels################
+#########################uses the conversion table above####################################
+map_counts_to_label_vol <- function(structure_IDs, aba_label_file, mesoscale_to_label_file) {
+  
+  count_vol <- rep(0, length(aba_label_file))
+  
+  for (i in seq_len(nrow(structure_IDs))) {
+    sid   <- as.character(structure_IDs$`structure-id`[i])
+    count <- structure_IDs$n[i]
+    
+    if (sid %in% names(mesoscale_to_label_file)) {
+      # Parent not in label file — distribute count to all children
+      child_ids   <- mesoscale_to_label_file[[sid]]
+      matched_idx <- which(aba_label_file %in% child_ids)
+    } else {
+      # Direct match in label file
+      matched_idx <- which(aba_label_file == as.integer(sid))
+    }
+    
+    count_vol[matched_idx] <- count_vol[matched_idx] + count
+  }
+  
+  return(count_vol)
+}
+
 #############Compare manual vs. automated QC tracers (with regions)###########
 ##original Knox conn tracer list before removal
 ##load list of Knox connectome tracers
@@ -395,8 +450,7 @@ structure_IDs <- df_with_structures %>%
 aba_label_file_missing_regions <- rep(0, length(aba_label_file))
 
 # update with counts instead of 1
-matched_idx <- match(aba_label_file, structure_IDs$`structure-id`)
-aba_label_file_missing_regions[!is.na(matched_idx)] <- structure_IDs$n[matched_idx[!is.na(matched_idx)]]
+aba_label_file_missing_regions <- map_counts_to_label_vol(structure_IDs, aba_label_file, mesoscale_to_label_file)
 
 #####repeat for overall tracer df
 df_with_structures <- tracer_sites
@@ -408,17 +462,17 @@ aba_label_file_knox_regions <- rep(0, length(aba_label_file))
 
 # update with counts instead of 1
 matched_idx <- match(aba_label_file, structure_IDs$`structure-id`)
-aba_label_file_knox_regions[!is.na(matched_idx)] <- structure_IDs$n[matched_idx[!is.na(matched_idx)]]
+aba_label_file_knox_regions <- map_counts_to_label_vol(structure_IDs, aba_label_file, mesoscale_to_label_file)
 
 ####write out output volumes
 vol_output_dir="../derivatives/excluded_tracer_aggregate_volumes/"
-mincWriteVolume(aba_label_file_missing_regions, like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions.mnc"))
+mincWriteVolume(aba_label_file_missing_regions, like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions.mnc"), clobber=TRUE)
 ####save the RATIO of missing injections to total injections within each region
 output_ratio_vol <- rep(0, length(aba_label_file))
 output_ratio_vol[which(aba_label_file_knox_regions > 0)] <- 
   aba_label_file_missing_regions[which(aba_label_file_knox_regions > 0)]/aba_label_file_knox_regions[which(aba_label_file_knox_regions > 0)]
 mincWriteVolume(output_ratio_vol, 
-                like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions_ratio.mnc"))
+                like=aba_label_filepath, paste0(vol_output_dir, "overall_excluded_tracer_regions_ratio.mnc"), clobber=TRUE)
 
 
 ####visualize using Yohan's visualization script
@@ -493,7 +547,7 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
   ) + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
-  facet_wrap(~ slice_world, ncol = 3, labeller = labeller(slice_world = function(x) paste0("Slice: ", x))) +  
+  facet_wrap(~ slice_world, ncol = 4, labeller = labeller(slice_world = function(x) paste0("Slice: ", x))) +  
   coord_fixed(ratio = 1) +
   theme_void(base_size=30) +
   theme(
@@ -609,7 +663,7 @@ p <- ggplot(data = allen_50um_template_df, mapping = aes(x = x, y = z)) +
   ) + 
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
-  facet_wrap(~ slice_world, ncol = 3, labeller = labeller(slice_world = function(x) paste0("Slice: ", x))) +  
+  facet_wrap(~ slice_world, ncol = 4, labeller = labeller(slice_world = function(x) paste0("Slice: ", x))) +  
   coord_fixed(ratio = 1) +
   theme_void(base_size=30) +
   theme(

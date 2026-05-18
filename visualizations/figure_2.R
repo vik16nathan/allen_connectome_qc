@@ -286,7 +286,6 @@ qc_table_removal_full <- as.data.frame(read_csv("tables/tracers_to_remove_adjbox
 inj_size_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto Large Inj."] == 1), "Tracer"]
 proj_size_outliers <- qc_table_removal_full[which(qc_table_removal_full[,"Auto Large Proj."] == 1), "Tracer"]
 
-zscore_thresh <- 4
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df %>%
   mutate(
     sd_outlier = tracer %in% inj_size_outliers | tracer %in% proj_size_outliers,

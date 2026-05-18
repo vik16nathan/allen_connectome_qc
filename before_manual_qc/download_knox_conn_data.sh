@@ -41,6 +41,10 @@ for csv_file in "${!file_to_outdir[@]}"; do
 
     mapfile -t csv_data < <(tail -n +2 "$csv_file")
     for tracer in "${csv_data[@]}"; do  
+        ###get rid of tracer 310207648
+        if [ "$tracer" -eq "310207648" ]; then
+            continue
+        fi
         ##download injection fraction/injection density/projection density from Allen API
         mkdir -p "${output_dir}/${tracer}"
 

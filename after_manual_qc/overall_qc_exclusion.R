@@ -4,6 +4,11 @@ setwd("..")
 
 harmonized_qc_dir <- "./harmonized_ratings/"
 
+###########TAKE AUTOMATED INJECTION/PROJECTION THRESHOLDS AS AN ARGUMENT##############
+args <- commandArgs(trailingOnly = TRUE)
+inj_thresh <- args[1]
+proj_thresh <- args[2]
+
 ##########combine all the exclusion criteria#################################
 ##binary matrix documenting tracers + failure reasons 
 tracer_removal_df <- data.frame(matrix(ncol=12, nrow=0)) 
@@ -11,7 +16,7 @@ colnames(tracer_removal_df) <- c("Tracer", "Auto OOB Proj.", "Auto Vent Proj.", 
                                  "Manual Nonspecific Inj.", "Manual Cortical Leaking Inj.", 
                                  "Manual Nonspecific Proj.", "Manual Small Proj.", "Manual Misaligned Proj.")
 ###read in data
-tracer_num_vox_oob_vent_df <- as.data.frame(read.csv("./tables/knox_oob_vent_df_inj0.5_proj0.1_437exps.csv"))
+tracer_num_vox_oob_vent_df <- as.data.frame(read.csv(paste0("./tables/knox_oob_vent_df_inj", inj_thresh, "_proj", proj_thresh, "_437exps.csv")))
 tracer_num_vox_oob_vent_df <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$tracer != 310207648),]
 
 #################automated OOB/ventricular voxels##########################
@@ -121,9 +126,61 @@ for(tracer in auto_small_proj_list) {
 }
 
 
+######################print all cutoff values#########################
+cutoffs <- c(
+  out_vox_thresh_oob  = out_vox_thresh_oob,
+  out_vox_thresh_vent = out_vox_thresh_vent,
+  out_vox_thresh_inj  = out_vox_thresh_inj,
+  out_vox_thresh_proj = out_vox_thresh_proj,
+  inj_cutoff_val      = inj_cutoff_val,
+  proj_cutoff_val     = proj_cutoff_val
+)
+print(cutoffs)
+
+
+######WRITE OUT AUTOMATED-ONLY EXPERIMENTS TO EXCLUDE################
+
+if(inj_thresh == 0.5 && proj_thresh == 0.1) {
+  input_file  <- "mouse_connectivity_models/paper/experiments_exclude.json"
+  output_file <- "mouse_connectivity_models/paper/experiments_exclude_updated_automated_only.json"
+
+  # IDs to append
+  new_ids <- tracer_removal_df$Tracer
+
+  # ---- read JSON with comments ----
+  txt <- readLines(input_file, warn = FALSE)
+  txt <- gsub("//.*$", "", txt)
+  txt <- txt[nzchar(trimws(txt))]
+
+  json_data <- fromJSON(paste(txt, collapse = "\n"))
+
+  # ---- append ----
+  json_data <- sort(unique(c(json_data, new_ids)))
+
+  # ---- format: 7 elements per row ----
+  chunks <- split(json_data, ceiling(seq_along(json_data) / 7))
+
+  lines <- c(
+    "[",
+    paste(
+      vapply(
+        chunks,
+        function(x) paste0("  ", paste(x, collapse = ", ")),
+        character(1)
+      ),
+      collapse = ",\n"
+    ),
+    "]"
+  )
+
+  writeLines(lines, output_file)
+
+  cat("Wrote:", output_file, "\n")
+}
 
 ############################MANUAL QC#################################
 ################load consensus QC ratings from Steph##################
+########NOTE: only defined at a single set of inj/proj thresholds#####
 
 injection_manual_qc_file <- as.data.frame(read.csv(paste0(harmonized_qc_dir,"knox_inj_prod_bin0.5_qc_harmonized.csv"), header=FALSE))
 
@@ -202,11 +259,21 @@ for(tracer in proj_fail_misaligned) {
 # 1) Replace NA with 0
 df0 <- tracer_removal_df %>%
   mutate(across(-Tracer, ~ ifelse(is.na(.x), 0, .x)))
-write_csv(df0, "tables/tracers_to_remove_adjboxStats_skew_outliers.csv", col_names=TRUE)
+
+##########WRITE OUT "DEFAULT" QC REMOVALS using inj_thresh 0.5 and proj_thresh 0.1##############
+
+if(inj_thresh == 0.5 & proj_thresh == 0.1) {
+  write_csv(df0, "tables/tracers_to_remove_adjboxStats_skew_outliers.csv", col_names=TRUE)
+  output_file <- "mouse_connectivity_models/paper/experiments_exclude_updated.json"
+} else {
+  output_file <- paste0("mouse_connectivity_models/paper/experiments_exclude_updated_auto_inj",inj_thresh,"_proj", proj_thresh,".json")
+}
+
+write_csv(df0, paste0("tables/tracers_to_remove_adjboxStats_skew_outliers_auto_inj",inj_thresh,"_proj", proj_thresh, ".csv"), col_names=TRUE)
 
 ##########Write out excluded experiments to experiments_exclude_updated.json within mouse_connectivity_models/paper/#############
 input_file  <- "mouse_connectivity_models/paper/experiments_exclude.json"
-output_file <- "mouse_connectivity_models/paper/experiments_exclude_updated.json"
+
 
 # IDs to append
 new_ids <- tracer_removal_df$Tracer
@@ -240,4 +307,99 @@ lines <- c(
 writeLines(lines, output_file)
 
 cat("Wrote:", output_file, "\n")
+
+#################REPEAT FOR A BROADER RANGE OF LOWER OUTLIERS#####################
+lower_outlier_thresh <- c(6, 8)
+for(rank in lower_outlier_thresh) {
+
+  output_file <- paste0("mouse_connectivity_models/paper/experiments_exclude_updated_auto_inj",inj_thresh,"_proj", proj_thresh,"_lower_outliers_", rank,".json")
+  sorted_df <- tracer_num_vox_oob_vent_df %>%
+    arrange(inj_num_vox) %>%
+    slice(1:50) %>%
+    mutate(Rank = 1:50)
+
+  # Add group coloring
+  sorted_df <- sorted_df %>%
+    mutate(ColorGroup = ifelse(Rank <= rank, "Bottom", "Others"))
+
+  # Get cutoff value
+  inj_cutoff_val <- max(sorted_df$inj_num_vox[sorted_df$ColorGroup == "Bottom"])
+
+  ##repeat for projections
+  sorted_df <- tracer_num_vox_oob_vent_df %>%
+    arrange(proj_num_vox) %>%
+    slice(1:50) %>%
+    mutate(Rank = 1:50)
+
+  # Add group coloring
+  sorted_df <- sorted_df %>%
+    mutate(ColorGroup = ifelse(Rank <= 2, "Bottom", "Others"))
+
+  # Get cutoff value
+  proj_cutoff_val <- max(sorted_df$proj_num_vox[sorted_df$ColorGroup == "Bottom"])
+
+
+  auto_small_inj_list <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$inj_num_vox <= inj_cutoff_val),"tracer"]
+  for(tracer in auto_small_inj_list) {
+    if(tracer %in% tracer_removal_df$Tracer) {
+      row_index <- which(tracer_removal_df$Tracer == tracer)
+      tracer_removal_df[row_index,"Auto Small Inj."] <- 1
+    }
+    else {
+      tracer_removal_df[nrow(tracer_removal_df)+1, "Tracer"] <- tracer
+      tracer_removal_df[nrow(tracer_removal_df), "Auto Small Inj."] <- 1
+    }
+  }
+
+  auto_small_proj_list <- tracer_num_vox_oob_vent_df[which(tracer_num_vox_oob_vent_df$proj_num_vox <= proj_cutoff_val),"tracer"]
+  for(tracer in auto_small_proj_list) {
+    if(tracer %in% tracer_removal_df$Tracer) {
+      row_index <- which(tracer_removal_df$Tracer == tracer)
+      tracer_removal_df[row_index,"Auto Small Proj."] <- 1
+    }
+    else {
+      tracer_removal_df[nrow(tracer_removal_df)+1, "Tracer"] <- tracer
+      tracer_removal_df[nrow(tracer_removal_df), "Auto Small Proj."] <- 1
+    }
+  }
+
+
+  ####WRITE OUT NEW .JSON FILE OF EXPERIMENTS TO EXCLUDE######
+  input_file  <- "mouse_connectivity_models/paper/experiments_exclude.json"
+
+
+  # IDs to append
+  new_ids <- tracer_removal_df$Tracer
+
+  # ---- read JSON with comments ----
+  txt <- readLines(input_file, warn = FALSE)
+  txt <- gsub("//.*$", "", txt)
+  txt <- txt[nzchar(trimws(txt))]
+
+  json_data <- fromJSON(paste(txt, collapse = "\n"))
+
+  # ---- append ----
+  json_data <- sort(unique(c(json_data, new_ids)))
+
+  # ---- format: 7 elements per row ----
+  chunks <- split(json_data, ceiling(seq_along(json_data) / 7))
+
+  lines <- c(
+    "[",
+    paste(
+      vapply(
+        chunks,
+        function(x) paste0("  ", paste(x, collapse = ", ")),
+        character(1)
+      ),
+      collapse = ",\n"
+    ),
+    "]"
+  )
+
+  writeLines(lines, output_file)
+
+  cat("Wrote:", output_file, "\n")
+
+}
 

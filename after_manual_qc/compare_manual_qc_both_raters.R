@@ -1,7 +1,8 @@
 library("dplyr")
 library("readr")
 library("tidyr")
-setwd("..")
+library("irr")  # ADD THIS
+setwd("/data/chamal/projects/natvik/allen_qc_reproducible_01192026/allen_connectome_qc/")
 ##load Steph's qc csv
 steph_qc_csv <- as.data.frame(read_delim("./rater2/vikram-qc-full.csv", delim="/"))
 steph_qc_csv <- steph_qc_csv[,c(1,2,4,5)]
@@ -59,6 +60,7 @@ write.table(proj_tracers_to_flag, "harmonized_ratings/vikram_steph_proj_qc_diffe
 
 
 ############LOAD HARMONIZED QC TO CREATE FINAL QC CSV########################
+setwd("/data/chamal/projects/natvik/copy_of_allen_qc_reproducible_rerun_cv_04122026/allen_connectome_qc/")
 harmonized_qc_inj <- read_csv("harmonized_ratings/vikram_steph_inj_qc_differences_harmonized.csv",col_names=FALSE)
 harmonized_qc_proj <- read_csv("harmonized_ratings/vikram_steph_proj_qc_differences_harmonized.csv",col_names=FALSE)
 colnames(harmonized_qc_inj) <- c("file", "tracer", "vikram_rating", "steph_rating", "harmonized", "comments")
@@ -73,3 +75,23 @@ vikram_proj_qc_final[which(vikram_proj_qc_final$tracer %in% harmonized_qc_proj$t
 write.table(vikram_inj_qc_final, "harmonized_ratings/knox_inj_prod_bin0.5_qc_harmonized.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE, na="")
 write.table(vikram_proj_qc_final, "harmonized_ratings/knox_proj_bin0.1_qc_harmonized.csv", sep=",",row.names=FALSE, col.names=FALSE, quote=FALSE, na="")
 
+######calculate cohen's kappa############
+# Filter out 9s and 5s before calculating kappa (there's a single 9 and a single 5 that only V.N. applied)
+vikram_steph_inj_qc_clean <- vikram_steph_inj_qc %>%
+  filter(vikram_rating != 9, steph_rating != 9)
+
+vikram_steph_proj_qc_clean <- vikram_steph_proj_qc %>%
+  filter(vikram_rating != 5, steph_rating != 5)
+
+# Kappa
+inj_kappa_clean <- kappa2(vikram_steph_inj_qc_clean[, c("vikram_rating", "steph_rating")])
+proj_kappa_clean <- kappa2(vikram_steph_proj_qc_clean[, c("vikram_rating", "steph_rating")])
+
+print("Injection kappa (excluding 9s):")
+print(inj_kappa_clean)
+print("Projection kappa (excluding 5s):")
+print(proj_kappa_clean)
+
+# Confusion matrices
+table(vikram_steph_inj_qc_clean$vikram_rating, vikram_steph_inj_qc_clean$steph_rating)
+table(vikram_steph_proj_qc_clean$vikram_rating, vikram_steph_proj_qc_clean$steph_rating)

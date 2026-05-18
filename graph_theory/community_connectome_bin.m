@@ -29,7 +29,7 @@ agreement_thresh=0.5;
 for percentile_threshold=[80]  % keep top 20% of connections
     for i=1:numel(knox_rgn_conn_matrices)
         %%set seed for reproducibility
-        rng(123);
+        rng(1234);
         
         %%binarize structural connectivity
         knox_rgn_conn_matrix_original=readmatrix(knox_rgn_conn_matrices{i});

@@ -4,7 +4,7 @@ set -euo pipefail
 ###update allensdk download function to accommodate longer timeouts and download all data
 ### === Step: increase allensdk HTTP stream timeout ===
 
-ALLENSDK_API_FILE=".venv/lib/python3.9/site-packages/allensdk/api/api.py"
+ALLENSDK_API_FILE="../.venv/lib/python3.9/site-packages/allensdk/api/api.py"
 if [[ ! -f "$ALLENSDK_API_FILE" ]]; then
     echo "❌ allensdk api.py not found at:"
     echo "   $ALLENSDK_API_FILE"
